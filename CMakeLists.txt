@@ -23,7 +23,7 @@ target_sources(app PRIVATE ${app_sources})
 FILE(GLOB ex_sources src/device/*/*.c)
 target_sources(app PRIVATE ${ex_sources})
 
-FILE(GLOB ex_sources src/examples/*/*.c)
+FILE(GLOB ex_sources src/test/*/*.c)
 target_sources(app PRIVATE ${ex_sources})
 
 FILE(GLOB share_sources src/shared_data/*.c)
@@ -35,7 +35,7 @@ target_include_directories(app PRIVATE src)
 target_include_directories(app PRIVATE src/MAC_802_15_4)
 target_include_directories(app PRIVATE src/shared_data)
 
-# target_compile_definitions(app PRIVATE TEST_READING_DEV_ID)
+target_compile_definitions(app PRIVATE TEST_READING_DEV_ID)
 # target_compile_definitions(app PRIVATE TEST_AES_SS_TWR_INITIATOR) # stlink
 # target_compile_definitions(app PRIVATE TEST_AES_SS_TWR_RESPONDER)   # daplink
 

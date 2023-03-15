@@ -1,5 +1,5 @@
-#ifndef _EXAMPLE_H_
-#define _EXAMPLE_H_
+#ifndef _TEST_H_
+#define _TEST_H_
 
 
 #if defined(TEST_READING_DEV_ID)

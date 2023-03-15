@@ -25,7 +25,7 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
 #define TEST_STACKSIZE 4096
 #define _TEST_
-#include <examples/example.h>
+#include "test/test.h"
 void (*test_fun)(void *, void *, void *);
 static K_THREAD_STACK_DEFINE(test_stack, TEST_STACKSIZE);
 static struct k_thread test_thread;
