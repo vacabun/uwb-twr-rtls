@@ -1,0 +1,30 @@
+{
+    "env": {
+        "myZephyrSourcePath": "/home/vacabun/Workspace/zephyrproject/zephyr",
+        "myZephyrSDKPath": "/home/vacabun/Workspace/zephyrproject/zephyr-sdk-0.15.1"
+    },
+    "configurations": [
+        {
+            "name": "zephyr",
+            "includePath": [
+                "${myZephyrSourcePath}/include/",
+                "${myZephyrSourcePath}/lib/libc/minimal/include/",
+                "${myZephyrSourcePath}/arch/arm/include/",
+                "${myZephyrSourcePath}/build/zephyr/include/generated/",
+                "${workspaceFolder}/build/zephyr/include/generated/",
+                "${workspaceFolder}/build/zephyr/include/",
+                "${workspaceFolder}/zephyr-dw3000-driver/zephyr/dwt_uwb_driver/inc/",
+                "${workspaceFolder}/zephyr-dw3000-driver/zephyr/platform/",
+                "${workspaceFolder}/src/",
+                "${workspaceFolder}/build/zephyr/include/generated"
+            ],
+            "defines": [],
+            "compilerPath": "${myZephyrSDKPath}/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc",
+            "cStandard": "c11",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "gcc-arm",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+        }
+    ],
+    "version": 4
+}

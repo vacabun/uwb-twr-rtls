@@ -1,0 +1,68 @@
+/ {
+	chosen {
+		zephyr,console = &cdc_acm_uart0;
+		zephyr,shell-uart = &cdc_acm_uart0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		user_led: led {
+			gpios = <&gpioa 0 GPIO_ACTIVE_LOW>;
+			label = "User LED";
+		};
+	};
+
+};
+
+&zephyr_udc0 {
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+&timers4 {
+	status = "disabled";
+};
+
+&i2c1 {
+	status = "disabled";
+};
+
+&clk_hse {
+	clock-frequency = <DT_FREQ_M(25)>;
+	status = "okay";
+};
+
+&pll {
+	div-m = <25>;
+	mul-n = <144>;
+	div-p = <2>;
+	div-q = <3>;
+	clocks = <&clk_hse>;
+	status = "okay";
+};
+
+&rcc {
+	clocks = <&pll>;
+	clock-frequency = <DT_FREQ_M(72)>;
+	ahb-prescaler = <1>;
+	apb1-prescaler = <2>;
+	apb2-prescaler = <1>;
+};
+
+&spi1 {
+	status = "okay";
+	pinctrl-0 = <&spi1_sck_pa5 &spi1_nss_pa4
+		     &spi1_miso_pa6 &spi1_mosi_pa7>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
+	dw3000@0 {
+		compatible = "decawave,dw3000";
+		label = "DW3000";
+		spi-max-frequency = <1000000>;
+		reg = <0>;
+		reset-gpios = <&gpiob 4 GPIO_ACTIVE_LOW>;
+		irq-gpios = <&gpiob 0 GPIO_ACTIVE_HIGH>;
+		wakeup-gpios = <&gpiob 3 GPIO_ACTIVE_HIGH>;
+	};
+};
