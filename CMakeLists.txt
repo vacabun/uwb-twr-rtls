@@ -8,8 +8,7 @@ set(BOARD stm32f401_mini)
 set(BOARD_FLASH_RUNNER openocd)
 
 # overlay the dts file
-# set(DTC_OVERLAY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/boards/stm32f401_mini_16M.overlay)
-set(DTC_OVERLAY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/boards/stm32f401_mini_25M.overlay)
+set(DTC_OVERLAY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/boards/stm32f401_mini.overlay)
 
 # add the dw3000-decadriver directory as a zephyr module by hand, not needed when using west
 list(APPEND ZEPHYR_EXTRA_MODULES ${CMAKE_CURRENT_SOURCE_DIR}/zephyr-dw3000-driver/)

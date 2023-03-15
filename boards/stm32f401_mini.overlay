@@ -28,6 +28,22 @@
 	status = "disabled";
 };
 
+// // 16M
+// &clk_hse {
+// 	clock-frequency = <DT_FREQ_M(16)>;
+// 	status = "okay";
+// };
+//
+// &pll {
+// 	div-m = <8>;
+// 	mul-n = <72>;
+// 	div-p = <2>;
+// 	div-q = <3>;
+// 	clocks = <&clk_hse>;
+// 	status = "okay";
+// };
+
+// 25M
 &clk_hse {
 	clock-frequency = <DT_FREQ_M(25)>;
 	status = "okay";
