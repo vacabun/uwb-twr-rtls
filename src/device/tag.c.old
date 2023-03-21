@@ -1,4 +1,4 @@
-#include <device/tag/tag.h>
+#include <device/tag.hpp>
 
 #if defined(DEVICE_TAG)
 
@@ -44,19 +44,24 @@ static uint8_t rx_buffer[RX_BUF_LEN];
 
 /*802_15_4 frame*/
 mac_frame_802_15_4_format_t mac_frame = {
-    .mhr_802_15_4.frame_ctrl[0] = 0x09,
-    .mhr_802_15_4.frame_ctrl[1] = 0xEC,
-    .mhr_802_15_4.sequence_num = 0x00,
-    .mhr_802_15_4.dest_pan_id[0] = 0x21,
-    .mhr_802_15_4.dest_pan_id[1] = 0x43,
-    .mhr_802_15_4.aux_security.security_ctrl = 0x0F,
+    mhr_802_15_4 : {
+        frame_ctrl : {0x09, 0xEC},
+        sequence_num : 0x00,
+        dest_pan_id : {0x21, 0x43},
+        aux_security : {
+            security_ctrl : 0x0f
+        }
+    }
 };
-static dwt_aes_config_t aes_config = {.key_load = AES_KEY_Load,           // load the key into AES engine see Note 15 below
-                                      .key_size = AES_KEY_128bit,         // use 128bit key
-                                      .key_src = AES_KEY_Src_Register,    // the key source is IC registers
-                                      .aes_core_type = AES_core_type_CCM, // Use CCM core
-                                      .aes_key_otp_type = AES_key_RAM,
-                                      .key_addr = 0};
+
+static dwt_aes_config_t aes_config =
+    {key_load : AES_KEY_Load,           // load the key into AES engine see Note 15 below
+     key_size : AES_KEY_128bit,         // use 128bit key
+     key_src : AES_KEY_Src_Register,    // the key source is IC registers
+     aes_core_type : AES_core_type_CCM, // Use CCM core
+     aes_key_otp_type : AES_key_RAM,
+     key_addr : 0
+     };
 
 /* Optional keys according to the key index - In AUX security header*/
 static const dwt_aes_key_t keys_options[NUM_OF_KEY_OPTIONS] = {{0x00010203, 0x04050607, 0x08090A0B, 0x0C0D0E0F, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
@@ -138,7 +143,7 @@ void tag_init_dw3000()
 
     // dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
 
-    dwt_setinterrupt(DWT_INT_TXFRS_BIT_MASK|DWT_INT_RXFCG_BIT_MASK, 0, DWT_ENABLE_INT);
+    dwt_setinterrupt(DWT_INT_TXFRS_BIT_MASK | DWT_INT_RXFCG_BIT_MASK, 0, DWT_ENABLE_INT);
 
     dwt_setcallbacks(&tag_tx_done_cb, &tag_rx_ok_cb, &tag_rx_timeout_cb, &tag_rx_err_cb, &tag_spi_err_cb, &tag_spi_ready_cb, &tag_dual_spi_cb);
     dw3000_hw_interrupt_enable();
@@ -173,28 +178,28 @@ void tag_rx_ok_cb(const dwt_cb_data_t *cb_data)
          * ignore the 8 first bytes of the response message as they contain the poll and response timestamps */
         // if (memcmp(&rx_buffer[START_RECEIVE_DATA_LOCATION], &rx_resp_msg[START_RECEIVE_DATA_LOCATION], aes_job_rx.payload_len - START_RECEIVE_DATA_LOCATION) == 0)
         // {
-            uint32_t poll_tx_ts, resp_rx_ts, poll_rx_ts, resp_tx_ts;
-            int32_t rtd_init, rtd_resp;
-            float clockOffsetRatio;
+        uint32_t poll_tx_ts, resp_rx_ts, poll_rx_ts, resp_tx_ts;
+        int32_t rtd_init, rtd_resp;
+        float clockOffsetRatio;
 
-            /* Retrieve poll transmission and response reception timestamps. See NOTE 9 below. */
-            poll_tx_ts = dwt_readtxtimestamplo32();
-            resp_rx_ts = dwt_readrxtimestamplo32();
+        /* Retrieve poll transmission and response reception timestamps. See NOTE 9 below. */
+        poll_tx_ts = dwt_readtxtimestamplo32();
+        resp_rx_ts = dwt_readrxtimestamplo32();
 
-            /* Read carrier integrator value and calculate clock offset ratio. See NOTE 11 below. */
-            clockOffsetRatio = ((float)dwt_readclockoffset()) / (uint32_t)(1 << 26);
+        /* Read carrier integrator value and calculate clock offset ratio. See NOTE 11 below. */
+        clockOffsetRatio = ((float)dwt_readclockoffset()) / (uint32_t)(1 << 26);
 
-            /* Get timestamps embedded in response message. */
-            resp_msg_get_ts(&rx_buffer[RESP_MSG_POLL_RX_TS_IDX], &poll_rx_ts);
-            resp_msg_get_ts(&rx_buffer[RESP_MSG_RESP_TX_TS_IDX], &resp_tx_ts);
+        /* Get timestamps embedded in response message. */
+        resp_msg_get_ts(&rx_buffer[RESP_MSG_POLL_RX_TS_IDX], &poll_rx_ts);
+        resp_msg_get_ts(&rx_buffer[RESP_MSG_RESP_TX_TS_IDX], &resp_tx_ts);
 
-            /* Compute time of flight and distance, using clock offset ratio to correct for differing local and remote clock rates */
-            rtd_init = resp_rx_ts - poll_tx_ts;
-            rtd_resp = resp_tx_ts - poll_rx_ts;
+        /* Compute time of flight and distance, using clock offset ratio to correct for differing local and remote clock rates */
+        rtd_init = resp_rx_ts - poll_tx_ts;
+        rtd_resp = resp_tx_ts - poll_rx_ts;
 
-            tof = ((rtd_init - rtd_resp * (1 - clockOffsetRatio)) / 2.0) * DWT_TIME_UNITS;
-            distance = tof * SPEED_OF_LIGHT;
-            LOG_DBG("distance: %f", distance);
+        tof = ((rtd_init - rtd_resp * (1 - clockOffsetRatio)) / 2.0) * DWT_TIME_UNITS;
+        distance = tof * SPEED_OF_LIGHT;
+        LOG_DBG("distance: %f", distance);
         // }
     }
     else
@@ -217,21 +222,11 @@ void tag_rx_ok_cb(const dwt_cb_data_t *cb_data)
     }
     // dwt_setinterrupt(DWT_INT_RXFCG_BIT_MASK, 0, DWT_ENABLE_INT);
 }
-void tag_rx_timeout_cb(const dwt_cb_data_t *cb_data)
-{
-}
-void tag_rx_err_cb(const dwt_cb_data_t *cb_data)
-{
-}
-void tag_spi_err_cb(const dwt_cb_data_t *cb_data)
-{
-}
-void tag_spi_ready_cb(const dwt_cb_data_t *cb_data)
-{
-}
-void tag_dual_spi_cb(const dwt_cb_data_t *cb_data)
-{
-}
+void tag_rx_timeout_cb(const dwt_cb_data_t *cb_data) {}
+void tag_rx_err_cb(const dwt_cb_data_t *cb_data) {}
+void tag_spi_err_cb(const dwt_cb_data_t *cb_data) {}
+void tag_spi_ready_cb(const dwt_cb_data_t *cb_data) {}
+void tag_dual_spi_cb(const dwt_cb_data_t *cb_data) {}
 
 void tag_initiator(void *p1, void *p2, void *p3)
 {
@@ -241,7 +236,6 @@ void tag_initiator(void *p1, void *p2, void *p3)
     dwt_aes_job_t aes_job_tx;
 
     LOG_DBG(APP_NAME);
-
 
     /*Configure the TX and RX AES jobs, the TX job is used to encrypt the Poll message,
      * the RX job is used to decrypt the Response message */

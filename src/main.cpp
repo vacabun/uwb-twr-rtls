@@ -33,15 +33,15 @@ static struct k_thread test_thread;
 #endif // TEST_READING_DEV_ID TEST_AES_SS_TWR_INITIATOR TEST_AES_SS_TWR_RESPONDER
 
 #if defined(DEVICE_TAG)
-#include <device/tag/tag.h>
-static K_THREAD_STACK_DEFINE(tag_initiator_stack, DEFAULT_STACKSIZE);
-static struct k_thread tag_initiator_thread;
+#include "device/tag.hpp"
+static K_THREAD_STACK_DEFINE(tag_stack, DEFAULT_STACKSIZE);
+static struct k_thread tag_thread;
 #endif // DEVICE_TAG
 
 #if defined(DEVICE_ANCHOR)
 
-#include <device/anthor/anthor.h>
-#include <device/device_common.h>
+#include <device/anthor/anthor.hpp>
+#include <device/device_common.hpp>
 
 // tx Workqueue Thread
 K_HEAP_DEFINE(tx_msg_heap, 1024);
@@ -58,7 +58,7 @@ static struct k_thread anthor_responder_thread;
 
 #endif // DEVICE_ANCHOR
 
-void main(void)
+int main(void)
 {
 	// swd debug
 #if CONFIG_DEBUG_SWD == 1
@@ -67,10 +67,9 @@ void main(void)
 
 	/* usb config */
 	if (usb_enable(NULL))
-		return;
+		return 0;
 	k_sleep(K_MSEC(1000));
 
-#if defined(_TEST_)
 #if defined(TEST_READING_DEV_ID)
 	test_fun = read_dev_id;
 #endif // TEST_READING_DEV_ID
@@ -83,6 +82,7 @@ void main(void)
 	test_fun = ss_aes_twr_responder;
 #endif // TEST_AES_SS_TWR_RESPONDER
 
+#if defined(_TEST_)
 	k_thread_create(&test_thread,
 					test_stack,
 					TEST_STACKSIZE,
@@ -96,18 +96,29 @@ void main(void)
 #endif //_TEST_
 
 #if defined(DEVICE_TAG)
-	tag_init_dw3000();
-	k_thread_create(&tag_initiator_thread,
-					tag_initiator_stack,
-					DEFAULT_STACKSIZE,
-					tag_initiator,
-					NULL,
-					NULL,
-					NULL,
-					K_PRIO_COOP(7),
-					0,
-					K_NO_WAIT);
-#endif
+	Tag tag;
+
+	std::function<void(void *, void *, void *)> func = [&](void *arg1, void *arg2, void *arg3)
+	{
+		tag.app(arg1, arg2, arg3);
+	};
+	k_thread_create(
+		&tag_thread,
+		tag_stack,
+		DEFAULT_STACKSIZE,
+		[](void *arg1, void *arg2, void *arg3)
+		{
+			std::function<void(void *, void *, void *)> *func_ptr =
+				static_cast<std::function<void(void *, void *, void *)> *>(arg1);
+			(*func_ptr)(arg2, arg3, nullptr);
+		},
+		&func,
+		NULL,
+		NULL,
+		K_PRIO_COOP(7),
+		0,
+		K_NO_WAIT);
+#endif //_DEVICE_TAG_
 
 #if defined(DEVICE_ANCHOR)
 	anthor_init_dw3000();
@@ -129,5 +140,10 @@ void main(void)
 					K_PRIO_COOP(7),
 					0,
 					K_NO_WAIT);
+#endif // _DEVICE_ANCHOR_
+
+#if defined(DEVICE)
+
 #endif
+	return 0;
 }

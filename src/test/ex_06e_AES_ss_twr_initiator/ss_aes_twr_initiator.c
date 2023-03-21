@@ -31,7 +31,7 @@
 #include <shared_data/config_options.h>
 #include <shared_data/shared_defines.h>
 #include <shared_data/shared_functions.h>
-#include <MAC_802_15_4/mac_802_15_4.h>
+#include <network/MAC_802_15_4/mac_802_15_4.hpp>
 
 #if defined(TEST_AES_SS_TWR_INITIATOR)
 

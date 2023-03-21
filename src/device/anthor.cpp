@@ -1,4 +1,4 @@
-#include <device/anthor/anthor.h>
+#include <device/anthor.hpp>
 
 #if defined(DEVICE_ANCHOR)
 

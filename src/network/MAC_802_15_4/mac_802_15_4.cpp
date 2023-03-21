@@ -10,10 +10,8 @@
  *
  */
 #include <dw3000.h>
-#include <MAC_802_15_4/mac_802_15_4.h>
+#include <network/MAC_802_15_4/mac_802_15_4.hpp>
 #include <string.h>
-
-dwt_mic_size_e dwt_mic_size_from_bytes(uint8_t mic_size_in_bytes);
 
 /*Set the pan id src + dst and src and dst addresses*/
 void mac_frame_set_pan_ids_and_addresses_802_15_4(
@@ -159,12 +157,12 @@ uint8_t mac_frame_get_aux_mic_size(mac_frame_802_15_4_format_t *mac_frame_ptr)
  * @return aes_results_e
  * */
 aes_results_e rx_aes_802_15_4(mac_frame_802_15_4_format_t *mac_frame_ptr, uint16_t frame_length, dwt_aes_job_t *aes_job, uint16_t max_payload,
-                              const dwt_aes_key_t *aes_key_ptr, uint64_t exp_src_addr, uint64_t exp_dst_addr, dwt_aes_config_t *aes_config)
+                              const dwt_aes_key_t *aes_key_ptr, uint64_t *src_addr, uint64_t exp_dst_addr, dwt_aes_config_t *aes_config)
 {
     uint8_t nonce[13];
     int8_t status;
     int16_t payload_len;
-    uint64_t src_addr, dst_addr;
+    uint64_t dst_addr;
     security_state_e security_state;
 
     /* the length of frame needs to be at least == header */
@@ -175,7 +173,7 @@ aes_results_e rx_aes_802_15_4(mac_frame_802_15_4_format_t *mac_frame_ptr, uint16
 
         /* Place a breakpoint here to see an unencrypted header */
 
-        get_src_and_dst_frame_addr(mac_frame_ptr, &src_addr, &dst_addr);
+        get_src_and_dst_frame_addr(mac_frame_ptr, src_addr, &dst_addr);
         security_state = get_security_state(mac_frame_ptr);
         // Check if we got a secure frame with the right destination and source addresses
         if ((security_state != SECURITY_STATE_SECURE) /*|| (exp_src_addr != src_addr) */|| (exp_dst_addr != dst_addr))

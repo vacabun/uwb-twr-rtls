@@ -21,7 +21,7 @@ extern "C"
 #include <string.h>
 #include "dw3000.h"
 #include <shared_data/shared_defines.h>
-
+dwt_mic_size_e dwt_mic_size_from_bytes(uint8_t mic_size_in_bytes);
 #define NUM_OF_KEY_OPTIONS 3
 
     /*  802_15_4 general MAC frame format
@@ -226,7 +226,7 @@ extern "C"
 #define MAC_FRAME_SEQ_NUM_802_15_4(mac_frame_ptr) (mac_frame_ptr)->mhr_802_15_4.sequence_num
 #define MAC_FRAME_DEST_PAN_ID_802_15_4(mac_frame_ptr, index) (mac_frame_ptr)->mhr_802_15_4.dest_pan_id[index]
 #define MAC_FRAME_DEST_ADDR_ID_802_15_4(mac_frame_ptr, index) (mac_frame_ptr)->mhr_802_15_4.dest_addr[index]
-//#define MAC_FRAME_SRC_PAN_ID_802_15_4(index)  MAC_frame_802_15_4_format.MHR_802_15_4.src_pan_id[index]
+// #define MAC_FRAME_SRC_PAN_ID_802_15_4(index)  MAC_frame_802_15_4_format.MHR_802_15_4.src_pan_id[index]
 #define MAC_FRAME_SRC_ADDR_802_15_4(mac_frame_ptr, index) (mac_frame_ptr)->mhr_802_15_4.src_addr[index]
 #define MAC_FRAME_SRC_ADDR_PTR_802_15_4(mac_frame_ptr) (mac_frame_ptr)->mhr_802_15_4.src_addr
 
@@ -248,7 +248,7 @@ extern "C"
     void mac_frame_set_aux_security_control(mac_frame_802_15_4_format_t *mac_frame_ptr);
     uint8_t mac_frame_get_aux_mic_size(mac_frame_802_15_4_format_t *mac_frame_ptr);
     aes_results_e rx_aes_802_15_4(mac_frame_802_15_4_format_t *mac_frame_ptr, uint16_t frame_length, dwt_aes_job_t *aes_job, uint16_t max_payload,
-                                  const dwt_aes_key_t *aes_key_ptr, uint64_t exp_src_addr, uint64_t exp_dst_addr, dwt_aes_config_t *aes_config);
+                                  const dwt_aes_key_t *aes_key_ptr, uint64_t *src_addr, uint64_t exp_dst_addr, dwt_aes_config_t *aes_config);
     security_state_e get_security_state(mac_frame_802_15_4_format_t *mac_frame_ptr);
     void get_src_and_dst_frame_addr(mac_frame_802_15_4_format_t *mac_frame_ptr, uint64_t *src, uint64_t *dst);
 
