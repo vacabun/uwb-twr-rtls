@@ -157,12 +157,11 @@ uint8_t mac_frame_get_aux_mic_size(mac_frame_802_15_4_format_t *mac_frame_ptr)
  * @return aes_results_e
  * */
 aes_results_e rx_aes_802_15_4(mac_frame_802_15_4_format_t *mac_frame_ptr, uint16_t frame_length, dwt_aes_job_t *aes_job, uint16_t max_payload,
-                              const dwt_aes_key_t *aes_key_ptr, uint64_t *src_addr, uint64_t exp_dst_addr, dwt_aes_config_t *aes_config)
+                              const dwt_aes_key_t *aes_key_ptr, uint64_t *src_addr, uint64_t *dst_addr, dwt_aes_config_t *aes_config, int16_t* payload_len)
 {
     uint8_t nonce[13];
     int8_t status;
-    int16_t payload_len;
-    uint64_t dst_addr;
+    // int16_t payload_len;
     security_state_e security_state;
 
     /* the length of frame needs to be at least == header */
@@ -173,13 +172,13 @@ aes_results_e rx_aes_802_15_4(mac_frame_802_15_4_format_t *mac_frame_ptr, uint16
 
         /* Place a breakpoint here to see an unencrypted header */
 
-        get_src_and_dst_frame_addr(mac_frame_ptr, src_addr, &dst_addr);
+        get_src_and_dst_frame_addr(mac_frame_ptr, src_addr, dst_addr);
         security_state = get_security_state(mac_frame_ptr);
-        // Check if we got a secure frame with the right destination and source addresses
-        if ((security_state != SECURITY_STATE_SECURE) /*|| (exp_src_addr != src_addr) */|| (exp_dst_addr != dst_addr))
-        {
-            return AES_RES_ERROR_IGNORE_FRAME; // This is not for us
-        }
+        // // Check if we got a secure frame with the right destination and source addresses
+        // if ((security_state != SECURITY_STATE_SECURE) /*|| (exp_src_addr != src_addr) */|| (exp_dst_addr != dst_addr))
+        // {
+        //     return AES_RES_ERROR_IGNORE_FRAME; // This is not for us
+        // }
 
         /* next get the MIC size */
         aes_job->mic_size = mac_frame_get_aux_mic_size(mac_frame_ptr);
@@ -188,9 +187,9 @@ aes_results_e rx_aes_802_15_4(mac_frame_802_15_4_format_t *mac_frame_ptr, uint16
             return AES_RES_ERROR_FRAME;
         }
 
-        payload_len = frame_length - (aes_job->header_len + aes_job->mic_size + FCS_LEN); /* to get unencrypted payload length subtract MIC, FCS and MHR lengths */
+        *payload_len = frame_length - (aes_job->header_len + aes_job->mic_size + FCS_LEN); /* to get unencrypted payload length subtract MIC, FCS and MHR lengths */
         /* Check if payload_len is valid */
-        if ((payload_len < 0) || (payload_len > max_payload))
+        if ((*payload_len < 0) || (*payload_len > max_payload))
         {
             return AES_RES_ERROR_FRAME;
         }
@@ -200,7 +199,7 @@ aes_results_e rx_aes_802_15_4(mac_frame_802_15_4_format_t *mac_frame_ptr, uint16
 
         /* Fill AES job to decrypt the received packet */
         aes_job->nonce = nonce;
-        aes_job->payload_len = payload_len;
+        aes_job->payload_len = *payload_len;
         aes_job->header = NULL; /* not used for decryption*/
         aes_config->mic = dwt_mic_size_from_bytes(aes_job->mic_size);
         // aes_config->aes_core_type=AES_core_type_CCM;

@@ -40,8 +40,8 @@ static struct k_thread tag_thread;
 
 #if defined(DEVICE_ANCHOR)
 
-#include <device/anthor/anthor.hpp>
-#include <device/device_common.hpp>
+#include <device/anthor.hpp>
+
 
 // tx Workqueue Thread
 K_HEAP_DEFINE(tx_msg_heap, 1024);
@@ -121,7 +121,12 @@ int main(void)
 #endif //_DEVICE_TAG_
 
 #if defined(DEVICE_ANCHOR)
-	anthor_init_dw3000();
+	Anthor anthor;
+
+	std::function<void(void *, void *, void *)> func = [&](void *arg1, void *arg2, void *arg3)
+	{
+		anthor.app(arg1, arg2, arg3);
+	};
 
 	// tx Workqueue Thread
 	k_work_queue_init(&anthor_tx_work_q);
@@ -130,16 +135,22 @@ int main(void)
 					   K_THREAD_STACK_SIZEOF(anthor_tx_work_q_stack_area),
 					   ANTHOR_TX_WORK_QUEUE_PRIORITY, NULL);
 
-	k_thread_create(&anthor_responder_thread,
-					anthor_responder_stack,
-					DEFAULT_STACKSIZE,
-					anthor_responder,
-					NULL,
-					NULL,
-					NULL,
-					K_PRIO_COOP(7),
-					0,
-					K_NO_WAIT);
+	k_thread_create(
+		&anthor_responder_thread,
+		anthor_responder_stack,
+		DEFAULT_STACKSIZE,
+		[](void *arg1, void *arg2, void *arg3)
+		{
+			std::function<void(void *, void *, void *)> *func_ptr =
+				static_cast<std::function<void(void *, void *, void *)> *>(arg1);
+			(*func_ptr)(arg2, arg3, nullptr);
+		},
+		&func,
+		NULL,
+		NULL,
+		K_PRIO_COOP(7),
+		0,
+		K_NO_WAIT);
 #endif // _DEVICE_ANCHOR_
 
 #if defined(DEVICE)
