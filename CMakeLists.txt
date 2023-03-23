@@ -35,13 +35,11 @@ target_sources(app PRIVATE ${ex_sources})
 target_include_directories(app PRIVATE include)
 
 # target_compile_definitions(app PRIVATE TEST_READING_DEV_ID)
-# target_compile_definitions(app PRIVATE TEST_AES_SS_TWR_INITIATOR) # stlink
-# target_compile_definitions(app PRIVATE TEST_AES_SS_TWR_RESPONDER)   # daplink
+# target_compile_definitions(app PRIVATE TEST_AES_SS_TWR_INITIATOR)
+# target_compile_definitions(app PRIVATE TEST_AES_SS_TWR_RESPONDER)
 
 target_compile_definitions(app PRIVATE DEVICE_TAG) # stlink
 # target_compile_definitions(app PRIVATE DEVICE_ANCHOR) # daplink
-
-target_compile_definitions(app PRIVATE DEVICE) # stlink
 
 target_compile_definitions(app PRIVATE CONFIG_FPU)
 

@@ -8,7 +8,7 @@ namespace msg
     {
     public:
         msg_initiator();
-        msg_type type;
+        uint8_t type;
     };
 }
 

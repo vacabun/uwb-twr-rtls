@@ -23,7 +23,7 @@ extern "C"
 #include <network/MAC_802_15_4/mac_802_15_4.hpp>
 #include <network/MAC_802_15_4/key.hpp>
 #include "msg/msg_initiator.hpp"
-
+#include "msg/msg_responder.hpp"
 #ifdef __cplusplus
 extern "C"
 {
@@ -37,6 +37,9 @@ extern dwt_txconfig_t txconfig_options;
 /* Default antenna delay values for 64 MHz PRF.*/
 #define TX_ANT_DLY 16385
 #define RX_ANT_DLY 16385
+
+/* Delay tx frames, in UWB microseconds.*/
+#define TX_DLY_UUS 4000
 
 /* Buffer to store received response message.
    The received frame cannot be bigger than 127 if STD PHR mode is used */
@@ -71,17 +74,15 @@ public:
     dwt_aes_job_t aes_job_rx;
     mac_frame_802_15_4_format_t mac_frame;
 
-    uint32_t frame_cnt;
-    uint8_t seq_cnt; // Frame sequence number, incremented after each transmission.
-
     uint8_t rx_buffer[RX_BUF_LEN];
 
     Device();
     void app(void *, void *, void *);
-    void tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr);
+    uint64_t tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr, uint8_t mode);
+    void set_msg_dly_ts(uint8_t *msg, uint16_t len, uint64_t ts);
     static void tx_done_cb(const dwt_cb_data_t *cb_data);
     static void rx_ok_cb(const dwt_cb_data_t *cb_data);
-    virtual void msg_process_cb(uint8_t *msg, int16_t msg_len, uint64_t src_addr, uint64_t dst_addr);
+    virtual void msg_process_cb(uint8_t *msg, uint16_t msg_len, uint64_t src_addr, uint64_t dst_addr, uint64_t rx_ts);
 };
 
 #endif

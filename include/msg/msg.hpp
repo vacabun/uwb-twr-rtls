@@ -2,7 +2,7 @@
 #define _MSG_HPP_
 #include <zephyr/kernel.h>
 
-enum msg_type{
+enum msg_type_def{
     MSG_INITIATOR = 0,
     MSG_RESPONDER
 };

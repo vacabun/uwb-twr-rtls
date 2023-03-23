@@ -9,7 +9,9 @@ namespace msg
     {
     public:
         msg_responder();
-        msg_type type;
+        uint8_t type;
+        uint64_t poll_rx_ts;
+        uint64_t resp_tx_ts;
     };
 }
 
