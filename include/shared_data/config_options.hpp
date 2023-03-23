@@ -10,11 +10,16 @@
  *
  */
 
+
+
+#ifndef EXAMPLES_CONFIG_OPTIONS_HPP_
+#define EXAMPLES_CONFIG_OPTIONS_HPP_
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 #include <dw3000.h>
-
-#ifndef EXAMPLES_CONFIG_OPTIONS_H_
-#define EXAMPLES_CONFIG_OPTIONS_H_
-
 /* Index values for errors in array */
 #define CRC_ERR_IDX                0
 #define RSE_ERR_IDX                1
@@ -240,5 +245,9 @@
 #define CONFIG_OPTION_33
 
 extern char dist_str[16];
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EXAMPLES_CONFIG_OPTIONS_H_ */

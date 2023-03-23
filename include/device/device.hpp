@@ -17,9 +17,9 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-#include <shared_data/config_options.h>
-#include <shared_data/shared_defines.h>
-#include <shared_data/shared_functions.h>
+#include <shared_data/config_options.hpp>
+#include <shared_data/shared_defines.hpp>
+#include <shared_data/shared_functions.hpp>
 #include <network/MAC_802_15_4/mac_802_15_4.hpp>
 #include <network/MAC_802_15_4/key.hpp>
 #include "msg/msg_initiator.hpp"

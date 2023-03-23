@@ -20,7 +20,7 @@ extern "C"
 
 #include <string.h>
 #include "dw3000.h"
-#include <shared_data/shared_defines.h>
+#include <shared_data/shared_defines.hpp>
 dwt_mic_size_e dwt_mic_size_from_bytes(uint8_t mic_size_in_bytes);
 #define NUM_OF_KEY_OPTIONS 3
 

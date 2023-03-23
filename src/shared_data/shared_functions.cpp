@@ -9,11 +9,14 @@
  * All rights reserved.
  *
  */
-
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 #include "dw3000.h"
-#include <shared_data/config_options.h>
-#include <shared_data/shared_defines.h>
-#include <shared_data/shared_functions.h>
+#include <shared_data/config_options.hpp>
+#include <shared_data/shared_defines.hpp>
+#include <shared_data/shared_functions.hpp>
 #include <stdlib.h>
 
 extern dwt_config_t config_options;
@@ -647,3 +650,8 @@ void waitforsysstatus(uint32_t *lo_result, uint32_t *hi_result, uint32_t lo_mask
         *hi_result = hi_result_tmp;
     }
 }
+
+#ifdef __cplusplus
+
+}
+#endif

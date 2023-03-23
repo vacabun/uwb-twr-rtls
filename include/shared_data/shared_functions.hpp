@@ -5,7 +5,7 @@
 extern "C"
 {
 #endif
-
+#include <dw3000.h>
 /* Power boost calculation service function defines*/
 #define LUT_1000_200_US_NUM 33    /* Number of frames duration values for which look up table has corresponding dial back in units of 0.1dB*/
 #define LUT_1000_200_US_STEP 25   /* Frame duration step in us between each index in LUT */
