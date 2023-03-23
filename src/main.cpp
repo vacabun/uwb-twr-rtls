@@ -14,23 +14,10 @@
 #include "stm32f4xx_ll_system.h"
 #endif
 
-#include "dw3000.h"
-
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart), "Console device is not ACM CDC UART device");
 LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
 #define DEFAULT_STACKSIZE 2048
-
-#if defined(TEST_READING_DEV_ID) || defined(TEST_AES_SS_TWR_INITIATOR) || defined(TEST_AES_SS_TWR_RESPONDER)
-
-#define TEST_STACKSIZE 4096
-#define _TEST_
-#include "test/test.h"
-void (*test_fun)(void *, void *, void *);
-static K_THREAD_STACK_DEFINE(test_stack, TEST_STACKSIZE);
-static struct k_thread test_thread;
-
-#endif // TEST_READING_DEV_ID TEST_AES_SS_TWR_INITIATOR TEST_AES_SS_TWR_RESPONDER
 
 #if defined(DEVICE_TAG)
 #include "device/tag.hpp"
@@ -41,7 +28,6 @@ static struct k_thread tag_thread;
 #if defined(DEVICE_ANCHOR)
 
 #include <device/anthor.hpp>
-
 
 // tx Workqueue Thread
 K_HEAP_DEFINE(tx_msg_heap, 1024);
@@ -70,31 +56,6 @@ int main(void)
 		return 0;
 	k_sleep(K_MSEC(1000));
 
-#if defined(TEST_READING_DEV_ID)
-	test_fun = read_dev_id;
-#endif // TEST_READING_DEV_ID
-
-#if defined(TEST_AES_SS_TWR_INITIATOR)
-	test_fun = ss_aes_twr_initiator;
-#endif // TEST_AES_SS_TWR_INITIATOR
-
-#if defined(TEST_AES_SS_TWR_RESPONDER)
-	test_fun = ss_aes_twr_responder;
-#endif // TEST_AES_SS_TWR_RESPONDER
-
-#if defined(_TEST_)
-	k_thread_create(&test_thread,
-					test_stack,
-					TEST_STACKSIZE,
-					test_fun,
-					NULL,
-					NULL,
-					NULL,
-					K_PRIO_COOP(7),
-					0,
-					K_NO_WAIT);
-#endif //_TEST_
-
 #if defined(DEVICE_TAG)
 	Tag tag;
 
@@ -102,6 +63,7 @@ int main(void)
 	{
 		tag.app(arg1, arg2, arg3);
 	};
+
 	k_thread_create(
 		&tag_thread,
 		tag_stack,
@@ -118,6 +80,7 @@ int main(void)
 		K_PRIO_COOP(7),
 		0,
 		K_NO_WAIT);
+
 #endif //_DEVICE_TAG_
 
 #if defined(DEVICE_ANCHOR)
@@ -153,8 +116,5 @@ int main(void)
 		K_NO_WAIT);
 #endif // _DEVICE_ANCHOR_
 
-#if defined(DEVICE)
-
-#endif
 	return 0;
 }
