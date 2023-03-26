@@ -1,6 +1,6 @@
 #include "device/device.hpp"
 
-LOG_MODULE_REGISTER(device, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(device, LOG_LEVEL);
 
 Device *Device::device_ptr = nullptr;
 
@@ -110,12 +110,9 @@ Device::Device()
         aes_job_tx.mode = AES_Encrypt;
         // aes_job_rx.mic_size
     }
-
     {
-        // dwt_setinterrupt(DWT_INT_TXFRS_BIT_MASK | DWT_INT_RXFCG_BIT_MASK, 0, DWT_ENABLE_INT);
         dwt_setinterrupt(DWT_INT_RXFCG_BIT_MASK, 0, DWT_ENABLE_INT);
         dwt_setcallbacks(
-            // &Device::tx_done_cb,
             nullptr,
             &Device::rx_ok_cb,
             nullptr,
@@ -184,6 +181,7 @@ uint64_t Device::tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr, uint8_t 
     uint64_t tx_ts = get_tx_timestamp_u64();
     mac_frame.mhr_802_15_4.sequence_num++;
     mac_frame_update_aux_frame_cnt(&mac_frame, mac_frame_get_aux_frame_cnt(&mac_frame) + 1);
+
     dwt_rxenable(DWT_START_RX_IMMEDIATE);
 
     return tx_ts;
@@ -230,19 +228,7 @@ void Device::rx_ok_cb(const dwt_cb_data_t *cb_data)
                                     &msg_len);
     if (status != AES_RES_OK)
     {
-        /* report any errors */
-        switch (status)
-        {
-        case AES_RES_ERROR_LENGTH:
-            LOG_DBG("AES length error");
-            break;
-        case AES_RES_ERROR:
-            LOG_DBG("ERROR AES");
-            break;
-        case AES_RES_ERROR_FRAME:
-            LOG_DBG("Error Frame");
-            break;
-        }
+        LOG_DBG("AES error");
     }
     else if (dst_addr == DEVICE_ADDR || dst_addr == BROADCAST_ADDR)
     {
@@ -256,7 +242,6 @@ void Device::rx_ok_cb(const dwt_cb_data_t *cb_data)
         if (work_msg != NULL)
         {
             memcpy(work_msg->msg, msg, msg_len);
-
             work_msg->len = msg_len;
             work_msg->src_addr = src_addr;
             work_msg->src_addr = src_addr;

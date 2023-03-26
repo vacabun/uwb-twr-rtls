@@ -15,7 +15,8 @@
 #endif
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart), "Console device is not ACM CDC UART device");
-LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
+
+LOG_MODULE_REGISTER(main, LOG_LEVEL);
 
 #define DEFAULT_STACKSIZE 2048
 
