@@ -157,7 +157,7 @@ uint8_t mac_frame_get_aux_mic_size(mac_frame_802_15_4_format_t *mac_frame_ptr)
  * @return aes_results_e
  * */
 aes_results_e rx_aes_802_15_4(mac_frame_802_15_4_format_t *mac_frame_ptr, uint16_t frame_length, dwt_aes_job_t *aes_job, uint16_t max_payload,
-                              const dwt_aes_key_t *aes_key_ptr, uint64_t *src_addr, uint64_t *dst_addr, dwt_aes_config_t *aes_config, int16_t* payload_len)
+                              const dwt_aes_key_t *aes_key_ptr, uint64_t *src_addr, uint64_t *dst_addr, dwt_aes_config_t *aes_config, uint16_t* payload_len)
 {
     uint8_t nonce[13];
     int8_t status;

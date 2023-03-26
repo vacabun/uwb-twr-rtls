@@ -1,14 +1,14 @@
-#ifndef _MSG_RESPONDER_HPP_
-#define _MSG_RESPONDER_HPP_
+#ifndef _MSG_TWR_RESPONSE_HPP_
+#define _MSG_TWR_RESPONSE_HPP_
 
 #include "msg/msg.hpp"
 
 namespace msg
 {
-    class msg_responder
+    class twr_response
     {
     public:
-        msg_responder();
+        twr_response();
         uint8_t type;
         uint64_t poll_rx_ts;
         uint64_t resp_tx_ts;

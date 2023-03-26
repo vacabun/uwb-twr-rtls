@@ -19,24 +19,24 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
 #define DEFAULT_STACKSIZE 2048
 
+// rx workqueue
+#define DEVICE_RX_WORK_QUEUE_STACK_SIZE 1024
+#define DEVICE_RX_WORK_QUEUE_PRIORITY 5
+K_THREAD_STACK_DEFINE(device_rx_work_q_stack_area, DEVICE_RX_WORK_QUEUE_STACK_SIZE);
+struct k_work_q device_rx_work_q;
+
 #if defined(DEVICE_TAG)
+
 #include "device/tag.hpp"
+
 static K_THREAD_STACK_DEFINE(tag_stack, DEFAULT_STACKSIZE);
 static struct k_thread tag_thread;
+
 #endif // DEVICE_TAG
 
 #if defined(DEVICE_ANCHOR)
 
 #include <device/anthor.hpp>
-
-// tx Workqueue Thread
-K_HEAP_DEFINE(tx_msg_heap, 1024);
-
-#define ANTHOR_TX_WORK_QUEUE_STACK_SIZE 512
-#define ANTHOR_TX_WORK_QUEUE_PRIORITY 5
-
-K_THREAD_STACK_DEFINE(anthor_tx_work_q_stack_area, ANTHOR_TX_WORK_QUEUE_STACK_SIZE);
-struct k_work_q anthor_tx_work_q;
 
 // main thread
 static K_THREAD_STACK_DEFINE(anthor_responder_stack, DEFAULT_STACKSIZE);
@@ -55,6 +55,13 @@ int main(void)
 	if (usb_enable(NULL))
 		return 0;
 	k_sleep(K_MSEC(1000));
+
+
+	k_work_queue_init(&device_rx_work_q);
+	k_work_queue_start(&device_rx_work_q,
+					   device_rx_work_q_stack_area,
+					   K_THREAD_STACK_SIZEOF(device_rx_work_q_stack_area),
+					   DEVICE_RX_WORK_QUEUE_PRIORITY, NULL);
 
 #if defined(DEVICE_TAG)
 	Tag tag;
@@ -75,7 +82,7 @@ int main(void)
 			(*func_ptr)(arg2, arg3, nullptr);
 		},
 		&func,
-		NULL,
+		&tag_thread,
 		NULL,
 		K_PRIO_COOP(7),
 		0,
@@ -91,13 +98,6 @@ int main(void)
 		anthor.app(arg1, arg2, arg3);
 	};
 
-	// tx Workqueue Thread
-	k_work_queue_init(&anthor_tx_work_q);
-	k_work_queue_start(&anthor_tx_work_q,
-					   anthor_tx_work_q_stack_area,
-					   K_THREAD_STACK_SIZEOF(anthor_tx_work_q_stack_area),
-					   ANTHOR_TX_WORK_QUEUE_PRIORITY, NULL);
-
 	k_thread_create(
 		&anthor_responder_thread,
 		anthor_responder_stack,
@@ -109,7 +109,7 @@ int main(void)
 			(*func_ptr)(arg2, arg3, nullptr);
 		},
 		&func,
-		NULL,
+		&anthor_responder_thread,
 		NULL,
 		K_PRIO_COOP(7),
 		0,

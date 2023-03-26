@@ -2,6 +2,7 @@
 #define _DEVICE_HPP_
 
 #include <functional>
+#include <string>
 
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
@@ -9,6 +10,7 @@
 #include <zephyr/drivers/uart.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/logging/log.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -17,13 +19,18 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
 #include <shared_data/config_options.hpp>
 #include <shared_data/shared_defines.hpp>
 #include <shared_data/shared_functions.hpp>
 #include <network/MAC_802_15_4/mac_802_15_4.hpp>
 #include <network/MAC_802_15_4/key.hpp>
-#include "msg/msg_initiator.hpp"
-#include "msg/msg_responder.hpp"
+
+#include "msg/twr_poll.hpp"
+#include "msg/twr_response.hpp"
+#include "msg/twr_final.hpp"
+#include "msg/twr_report.hpp"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -61,6 +68,16 @@ extern dwt_txconfig_t txconfig_options;
 
 typedef void (*FuncPtr)(uint8_t *, int16_t, uint64_t, uint64_t);
 
+typedef struct
+{
+    struct k_work work;
+    uint8_t msg[128];
+    uint16_t len;
+    uint64_t src_addr;
+    uint64_t dst_addr;
+    uint64_t rx_ts;
+} rx_work_msg;
+
 class Device
 {
 private:
@@ -82,6 +99,7 @@ public:
     void set_msg_dly_ts(uint8_t *msg, uint16_t len, uint64_t ts);
     static void tx_done_cb(const dwt_cb_data_t *cb_data);
     static void rx_ok_cb(const dwt_cb_data_t *cb_data);
+    static void rx_work_handler(struct k_work *item);
     virtual void msg_process_cb(uint8_t *msg, uint16_t msg_len, uint64_t src_addr, uint64_t dst_addr, uint64_t rx_ts);
 };
 
