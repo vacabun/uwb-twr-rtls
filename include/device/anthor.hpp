@@ -4,7 +4,7 @@
 #if defined(DEVICE_ANCHOR)
 
 #include "device/device.hpp"
-
+#include <zephyr/sys/hash_map.h>
 
 class Anthor : public Device
 {

@@ -10,6 +10,8 @@ namespace msg
     public:
         twr_report();
         uint8_t type;
+        uint64_t resp_tx_ts;
+        uint64_t final_rx_ts;
     };
 }
 

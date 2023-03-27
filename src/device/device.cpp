@@ -47,19 +47,19 @@ Device::Device()
 
     // dwt config
     {
-        config.chan = 5;                      // Channel number.
-        config.txPreambLength = DWT_PLEN_128; // Preamble length. Used in TX only.
-        config.rxPAC = DWT_PAC8;              // Preamble acquisition chunk size. Used in RX only.
-        config.txCode = 9;                    // TX preamble code. Used in TX only.
-        config.rxCode = 9;                    // RX preamble code. Used in RX only.
-        config.sfdType = DWT_SFD_DW_8;        // use non-standard 8 symbol
-        config.dataRate = DWT_BR_6M8;         // Data rate.
-        config.phrMode = DWT_PHRMODE_STD;     // PHY header mode.
-        config.phrRate = DWT_PHRRATE_STD;     // PHY header rate.
-        config.sfdTO = (129 + 8 - 8);         // SFD timeout Used in RX only. (preamble length + 1 + SFD length - PAC size).
-        config.stsMode = DWT_STS_MODE_OFF;    // STS disabled
-        config.stsLength = DWT_STS_LEN_64;    // STS length see allowed values in Enum dwt_sts_lengths_e
-        config.pdoaMode = DWT_PDOA_M0;        // PDOA mode off
+        config.chan = 5;                                                      // Channel number.
+        config.txPreambLength = DWT_PLEN_128;                                 // Preamble length. Used in TX only.
+        config.rxPAC = DWT_PAC8;                                              // Preamble acquisition chunk size. Used in RX only.
+        config.txCode = 9;                                                    // TX preamble code. Used in TX only.
+        config.rxCode = 9;                                                    // RX preamble code. Used in RX only.
+        config.sfdType = DWT_SFD_DW_8;                                        // use non-standard 8 symbol
+        config.dataRate = DWT_BR_6M8;                                         // Data rate.
+        config.phrMode = DWT_PHRMODE_STD;                                     // PHY header mode.
+        config.phrRate = DWT_PHRRATE_STD;                                     // PHY header rate.
+        config.sfdTO = (129 + 8 - 8);                                         // SFD timeout Used in RX only. (preamble length + 1 + SFD length - PAC size).
+        config.stsMode = (dwt_sts_mode_e)(DWT_STS_MODE_1 | DWT_STS_MODE_SDC); // STS mode 1 with SDC
+        config.stsLength = DWT_STS_LEN_64;                                    // STS length see allowed values in Enum dwt_sts_lengths_e
+        config.pdoaMode = DWT_PDOA_M0;                                        // PDOA mode off
 
         dwt_set_keyreg_128(&keys_options[KEY_INDEX - 1]); // set aes key
     }
@@ -170,7 +170,7 @@ uint64_t Device::tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr, uint8_t 
             dwt_writesysstatuslo(DWT_INT_TXFRS_BIT_MASK);
 
             char log_s[60];
-            snprintf(log_s, 60, "tx msg from %016llx to %016llx", DEVICE_ADDR, dest_addr);
+            snprintf(log_s, 60, "tx msg from %016llx to %016llx", (long long unsigned int)DEVICE_ADDR, dest_addr);
             LOG_HEXDUMP_DBG(msg, len, log_s);
         }
         else
@@ -194,8 +194,10 @@ void Device::set_msg_dly_ts(uint8_t *msg, uint16_t len, uint64_t ts)
     switch (msg_type)
     {
     case MSG_TWR_RESPONSE:
+#if defined(SS_TWR)
         msg::twr_response *m = (msg::twr_response *)msg;
         m->resp_tx_ts = ts;
+#endif
         break;
     }
 }
@@ -207,6 +209,19 @@ void Device::tx_done_cb(const dwt_cb_data_t *cb_data)
 
 void Device::rx_ok_cb(const dwt_cb_data_t *cb_data)
 {
+    // check sts quality
+    int16_t stsQual;
+    uint16_t stsStatus;
+    if ((dwt_readstsquality(&stsQual) >= 0) && (dwt_readstsstatus(&stsStatus, 0) == DWT_SUCCESS))
+    {
+        LOG_DBG("STS quality: %d, STS status: %d, STS quality good.", stsQual, stsStatus);
+    }
+    else
+    {
+        LOG_DBG("STS quality: %d, STS status: %d, STS quality bad.", stsQual, stsStatus);
+        return;
+    }
+
     uint16_t frame_len = cb_data->datalength;
 
     device_ptr->aes_config.mode = AES_Decrypt;
