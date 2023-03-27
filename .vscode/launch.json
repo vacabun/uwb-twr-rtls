@@ -1,0 +1,30 @@
+{
+    "configurations": [
+        {
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "openocd",
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
+            "name": "tag",
+            "device": "STM32F401CCU6",
+            "configFiles": [
+                "${workspaceFolder}/boards/daplink.cfg"
+            ]
+        },
+        {
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "openocd",
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
+            "name": "anthor",
+            "device": "STM32F401CCU6",
+            "configFiles": [
+                "${workspaceFolder}/boards/stlink.cfg"
+            ]
+        }
+        
+    ],
+    "version": "2.0.0"
+}

@@ -31,11 +31,18 @@ target_include_directories(app PRIVATE include)
 # target_compile_definitions(app PRIVATE DS_TWR)
 target_compile_definitions(app PRIVATE SS_TWR)
 
-# target_compile_definitions(app PRIVATE LOG_LEVEL=LOG_LEVEL_INF)
-target_compile_definitions(app PRIVATE LOG_LEVEL=LOG_LEVEL_DBG)
+target_compile_definitions(app PRIVATE LOG_LEVEL=LOG_LEVEL_INF)
+# target_compile_definitions(app PRIVATE LOG_LEVEL=LOG_LEVEL_DBG)
 
-# target_compile_definitions(app PRIVATE DEVICE_TAG) # stlink
-target_compile_definitions(app PRIVATE DEVICE_ANCHOR) # daplink
+target_compile_definitions(app PRIVATE PAN_ID=0x4321)
+
+# tag
+target_compile_definitions(app PRIVATE DEVICE_TAG) # daplink
+target_compile_definitions(app PRIVATE DEVICE_ADDR=0x0000000000000001)
+
+# anchor
+# target_compile_definitions(app PRIVATE DEVICE_ANCHOR) # stlink
+# target_compile_definitions(app PRIVATE DEVICE_ADDR=0x1000000000000001)
 
 target_compile_definitions(app PRIVATE CONFIG_FPU)
 

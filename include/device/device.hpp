@@ -56,15 +56,6 @@ extern dwt_txconfig_t txconfig_options;
 #define KEY_INDEX 1
 
 #define BROADCAST_ADDR 0x0000000000000000
-#define PAN_ID 0x4321 /* this is the PAN ID used in this example */
-
-#if defined(DEVICE_TAG)
-#define DEVICE_ADDR 0x8877665544332211 /* this is the address of the initiator */
-#endif
-
-#if defined(DEVICE_ANCHOR)
-#define DEVICE_ADDR 0x1122334455667788 /* this is the address of the initiator */
-#endif
 
 typedef void (*FuncPtr)(uint8_t *, int16_t, uint64_t, uint64_t);
 

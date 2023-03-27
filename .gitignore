@@ -1,4 +1,5 @@
 build
 .vscode/settings.json
+.vscode/.cortex-debug.registers.state.json
 .DS_Store
 *.DS_Store

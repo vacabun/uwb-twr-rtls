@@ -57,6 +57,22 @@ int main(void)
 		return 0;
 	k_sleep(K_MSEC(1000));
 
+    struct uart_config uart_cfg ={
+		baudrate: 1000000,
+		parity: UART_CFG_PARITY_NONE,
+		stop_bits: UART_CFG_STOP_BITS_1,
+		data_bits: UART_CFG_DATA_BITS_8,
+		flow_ctrl: UART_CFG_FLOW_CTRL_NONE
+	};
+
+    int ret = uart_configure(DEVICE_DT_GET(DT_ALIAS(serial)), &uart_cfg);
+    if (ret != 0)
+    {
+        LOG_DBG("Failed to configure UART: %d", ret);
+    }
+	else{
+		LOG_DBG("UART configured successfully");
+	}
 
 	k_work_queue_init(&device_rx_work_q);
 	k_work_queue_start(&device_rx_work_q,

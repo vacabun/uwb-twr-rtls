@@ -5,24 +5,27 @@
 LOG_MODULE_REGISTER(tag, LOG_LEVEL);
 
 SYS_HASHMAP_DEFAULT_DEFINE_STATIC(poll_tx_ts_map);
-
+SYS_HASHMAP_DEFAULT_DEFINE_STATIC(measure_res);
 K_SEM_DEFINE(measure_finish_sem, 0, 1);
 
 Tag::Tag()
 {
 }
+
 void Tag::app(void *p1, void *p2, void *p3)
 {
     LOG_DBG("Tag app start.");
+    std::vector<uint64_t> dst_addr_list;
+    dst_addr_list.push_back(0x1000000000000001);
+    dst_addr_list.push_back(0x1000000000000002);
+    dst_addr_list.push_back(0x1000000000000003);
     while (1)
     {
-        { // app
 
-            std::vector<uint64_t> dst_addr_list;
-            dst_addr_list.push_back(0x1122334455667788);
-            dst_addr_list.push_back(0x0000000000000001);
-            dst_addr_list.push_back(0x0000000000000002);
-            dst_addr_list.push_back(0x0000000000000003);
+        sys_hashmap_clear(&poll_tx_ts_map, NULL, NULL);
+        sys_hashmap_clear(&measure_res, NULL, NULL);
+
+        { // app
             for (int i = 0; i < dst_addr_list.size(); i++)
             {
                 msg::twr_poll msg;
@@ -30,10 +33,40 @@ void Tag::app(void *p1, void *p2, void *p3)
                 uint64_t tx_ts = tx_msg((uint8_t *)&msg, sizeof(msg), dst_addr, DWT_START_TX_IMMEDIATE);
                 sys_hashmap_insert(&poll_tx_ts_map, dst_addr, tx_ts, NULL);
 
-                k_sem_take(&measure_finish_sem, K_SECONDS(2));
+                k_sem_take(&measure_finish_sem, K_MSEC(20));
             }
         }
+        package_res();
         k_sleep(K_SECONDS(1));
+    }
+}
+
+void Tag::package_res(void)
+{
+    char package_str[512];
+
+    sprintf(package_str, "{\"addr\":\"%016llx\",\"data\":[", DEVICE_ADDR);
+
+    sys_hashmap_foreach(
+        &measure_res,
+        [](uint64_t key, uint64_t value, void *cookie)
+        {
+            uint64_t anthor_addr = key;
+            uint64_t distance = value;
+            char *package_str = (char *)cookie;
+
+            char str[64];
+            sprintf(str, "{\"addr\":\"%016llx\",\"distance\":%lld}", anthor_addr, distance);
+            strcat(package_str, str);
+            // LOG_DBG("\"addr\":\"%016llx\",\"distance\":%lld", anthor_addr, distance);
+        },
+        (void *)&package_str);
+
+    strcat(package_str, "]}");
+    for (int i = 0; i < strlen(package_str); i++)
+    {
+        char c = package_str[i];
+        uart_poll_out(DEVICE_DT_GET(DT_ALIAS(serial)), (uint8_t)c);
     }
 }
 void Tag::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_addr, uint64_t dst_addr, uint64_t rx_ts)
@@ -59,7 +92,12 @@ void Tag::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_
         double tof = ((rtd_init - rtd_resp * (1 - clockOffsetRatio)) / 2.0) * DWT_TIME_UNITS;
         double distance = tof * SPEED_OF_LIGHT;
 
-        LOG_DBG("distance from %016llx to %016llx is %lf", src_addr, DEVICE_ADDR, distance);
+        if (distance < 0)
+            distance = 0;
+
+        sys_hashmap_insert(&measure_res, src_addr, (uint64_t)(distance * 1000), NULL);
+
+        LOG_INF("distance from %016llx to %016llx is %lf", src_addr, DEVICE_ADDR, distance);
 
         k_sem_give(&measure_finish_sem);
 
