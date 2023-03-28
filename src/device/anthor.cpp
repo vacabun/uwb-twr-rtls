@@ -53,8 +53,10 @@ void Anthor::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t s
     {
         msg::twr_report msg;
         msg.final_rx_ts = rx_ts;
-        sys_hashmap_get(&response_tx_ts_map, src_addr, &msg.resp_tx_ts);
-
+        uint64_t ts;
+        sys_hashmap_get(&response_tx_ts_map, src_addr, &ts);
+        sys_hashmap_remove(&response_tx_ts_map, src_addr, NULL);
+        msg.resp_tx_ts = ts;
         tx_msg((uint8_t *)&msg, sizeof(msg), src_addr, DWT_START_TX_IMMEDIATE);
 
         break;

@@ -124,6 +124,9 @@ Device::Device()
     }
     k_sleep(K_MSEC(100));
     dwt_rxenable(DWT_START_RX_IMMEDIATE);
+
+    device_address = DEVICE_ADDR;
+    pan_id = PAN_ID;
 }
 
 void Device::app(void *, void *, void *)
@@ -132,7 +135,7 @@ void Device::app(void *, void *, void *)
 
 uint64_t Device::tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr, uint8_t mode)
 {
-    mac_frame_set_pan_ids_and_addresses_802_15_4(&mac_frame, PAN_ID, dest_addr, DEVICE_ADDR);
+    mac_frame_set_pan_ids_and_addresses_802_15_4(&mac_frame, pan_id, dest_addr, device_address);
     if (mode == DWT_START_TX_DELAYED)
     {
         uint32_t resp_tx_time = (get_sys_timestamp_u64() + (TX_DLY_UUS * UUS_TO_DWT_TIME)) >> 8;
@@ -170,7 +173,7 @@ uint64_t Device::tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr, uint8_t 
             dwt_writesysstatuslo(DWT_INT_TXFRS_BIT_MASK);
 
             char log_s[60];
-            snprintf(log_s, 60, "tx msg from %016llx to %016llx", (long long unsigned int)DEVICE_ADDR, dest_addr);
+            snprintf(log_s, 60, "tx msg from %016llx to %016llx", device_address, dest_addr);
             LOG_HEXDUMP_DBG(msg, len, log_s);
         }
         else
@@ -245,7 +248,7 @@ void Device::rx_ok_cb(const dwt_cb_data_t *cb_data)
     {
         LOG_DBG("AES error");
     }
-    else if (dst_addr == DEVICE_ADDR || dst_addr == BROADCAST_ADDR)
+    else if (dst_addr == device_ptr->device_address || dst_addr == BROADCAST_ADDR)
     {
         uint8_t *msg = device_ptr->rx_buffer;
 

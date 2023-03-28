@@ -74,6 +74,9 @@ class Device
 private:
 public:
     /* data */
+    uint64_t device_address;
+    uint16_t pan_id;
+
     static Device *device_ptr;
     dwt_config_t config;
     dwt_aes_config_t aes_config;

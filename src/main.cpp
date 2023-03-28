@@ -18,7 +18,7 @@ BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL);
 
-#define DEFAULT_STACKSIZE 2048
+#define DEFAULT_STACKSIZE 4096
 
 // rx workqueue
 #define DEVICE_RX_WORK_QUEUE_STACK_SIZE 1024
