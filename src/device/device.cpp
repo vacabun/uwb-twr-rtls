@@ -6,6 +6,8 @@ Device *Device::device_ptr = nullptr;
 
 K_HEAP_DEFINE(device_rx_work_msg_heap, 1024);
 
+K_MUTEX_DEFINE(transceiver_mutex);
+
 Device::Device()
 {
     device_ptr = this;
@@ -165,29 +167,36 @@ uint64_t Device::tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr, uint8_t 
     }
     else
     {
-        dwt_writetxfctrl(aes_job_tx.header_len + aes_job_tx.payload_len + aes_job_tx.mic_size + FCS_LEN, 0, 1);
-        dwt_forcetrxoff();
-        if (dwt_starttx(mode) == DWT_SUCCESS)
+        uint64_t tx_ts;
+        k_mutex_lock(&transceiver_mutex, K_FOREVER);
         {
-            waitforsysstatus(NULL, NULL, DWT_INT_TXFRS_BIT_MASK, 0);
-            dwt_writesysstatuslo(DWT_INT_TXFRS_BIT_MASK);
+            dwt_writetxfctrl(aes_job_tx.header_len + aes_job_tx.payload_len + aes_job_tx.mic_size + FCS_LEN, 0, 1);
+            dwt_forcetrxoff();
+            if (dwt_starttx(mode) == DWT_SUCCESS)
+            {
+                waitforsysstatus(NULL, NULL, DWT_INT_TXFRS_BIT_MASK, 0);
+                dwt_writesysstatuslo(DWT_INT_TXFRS_BIT_MASK);
 
-            char log_s[60];
-            snprintf(log_s, 60, "tx msg from %016llx to %016llx", device_address, dest_addr);
-            LOG_HEXDUMP_DBG(msg, len, log_s);
+                char log_s[60];
+                snprintf(log_s, 60, "tx msg from %016llx to %016llx", device_address, dest_addr);
+                LOG_HEXDUMP_DBG(msg, len, log_s);
+            }
+            else
+            {
+                LOG_DBG("tx error.");
+
+                return 0;
+            }
+            tx_ts = get_tx_timestamp_u64();
+            mac_frame.mhr_802_15_4.sequence_num++;
+            mac_frame_update_aux_frame_cnt(&mac_frame, mac_frame_get_aux_frame_cnt(&mac_frame) + 1);
+
+            dwt_rxenable(DWT_START_RX_IMMEDIATE);
         }
-        else
-        {
-            LOG_DBG("tx error.");
-        }
+        return tx_ts;
+        k_mutex_unlock(&transceiver_mutex);
     }
-    uint64_t tx_ts = get_tx_timestamp_u64();
-    mac_frame.mhr_802_15_4.sequence_num++;
-    mac_frame_update_aux_frame_cnt(&mac_frame, mac_frame_get_aux_frame_cnt(&mac_frame) + 1);
-
-    dwt_rxenable(DWT_START_RX_IMMEDIATE);
-
-    return tx_ts;
+    return 0;
 }
 
 void Device::set_msg_dly_ts(uint8_t *msg, uint16_t len, uint64_t ts)
@@ -212,72 +221,76 @@ void Device::tx_done_cb(const dwt_cb_data_t *cb_data)
 
 void Device::rx_ok_cb(const dwt_cb_data_t *cb_data)
 {
-    // check sts quality
-    int16_t stsQual;
-    uint16_t stsStatus;
-    if ((dwt_readstsquality(&stsQual) >= 0) && (dwt_readstsstatus(&stsStatus, 0) == DWT_SUCCESS))
+    k_mutex_lock(&transceiver_mutex, K_NO_WAIT);
     {
-        LOG_DBG("STS quality: %d, STS status: %d, STS quality good.", stsQual, stsStatus);
-    }
-    else
-    {
-        LOG_DBG("STS quality: %d, STS status: %d, STS quality bad.", stsQual, stsStatus);
-        return;
-    }
-
-    uint16_t frame_len = cb_data->datalength;
-
-    device_ptr->aes_config.mode = AES_Decrypt;
-
-    device_ptr->aes_job_rx.payload = device_ptr->rx_buffer;
-    PAYLOAD_PTR_802_15_4(&device_ptr->mac_frame) = device_ptr->rx_buffer;
-
-    uint64_t src_addr;
-    uint64_t dst_addr;
-    uint16_t msg_len;
-    int8_t status = rx_aes_802_15_4(&device_ptr->mac_frame,
-                                    frame_len,
-                                    &device_ptr->aes_job_rx,
-                                    sizeof(device_ptr->rx_buffer),
-                                    keys_options,
-                                    &src_addr,
-                                    &dst_addr,
-                                    &device_ptr->aes_config,
-                                    &msg_len);
-    if (status != AES_RES_OK)
-    {
-        LOG_DBG("AES error");
-    }
-    else if (dst_addr == device_ptr->device_address || dst_addr == BROADCAST_ADDR)
-    {
-        uint8_t *msg = device_ptr->rx_buffer;
-
-        char log_s[60];
-        snprintf(log_s, 60, "recv msg from %016llx to %016llx", src_addr, dst_addr);
-        LOG_HEXDUMP_DBG(msg, msg_len, log_s);
-
-        rx_work_msg *work_msg = (rx_work_msg *)k_heap_alloc(&device_rx_work_msg_heap, sizeof(rx_work_msg), K_NO_WAIT);
-        if (work_msg != NULL)
+        // check sts quality
+        int16_t stsQual;
+        uint16_t stsStatus;
+        if ((dwt_readstsquality(&stsQual) >= 0) && (dwt_readstsstatus(&stsStatus, 0) == DWT_SUCCESS))
         {
-            memcpy(work_msg->msg, msg, msg_len);
-            work_msg->len = msg_len;
-            work_msg->src_addr = src_addr;
-            work_msg->src_addr = src_addr;
-            work_msg->rx_ts = get_rx_timestamp_u64();
-            k_work_init(&work_msg->work, Device::rx_work_handler);
-            extern struct k_work_q device_rx_work_q;
-            k_work_submit_to_queue(&device_rx_work_q, &work_msg->work);
+            LOG_DBG("STS quality: %d, STS status: %d, STS quality good.", stsQual, stsStatus);
         }
         else
         {
-            LOG_DBG("heap alloc failed.");
+            LOG_DBG("STS quality: %d, STS status: %d, STS quality bad.", stsQual, stsStatus);
+            return;
         }
+
+        uint16_t frame_len = cb_data->datalength;
+
+        device_ptr->aes_config.mode = AES_Decrypt;
+
+        device_ptr->aes_job_rx.payload = device_ptr->rx_buffer;
+        PAYLOAD_PTR_802_15_4(&device_ptr->mac_frame) = device_ptr->rx_buffer;
+
+        uint64_t src_addr;
+        uint64_t dst_addr;
+        uint16_t msg_len;
+        int8_t status = rx_aes_802_15_4(&device_ptr->mac_frame,
+                                        frame_len,
+                                        &device_ptr->aes_job_rx,
+                                        sizeof(device_ptr->rx_buffer),
+                                        keys_options,
+                                        &src_addr,
+                                        &dst_addr,
+                                        &device_ptr->aes_config,
+                                        &msg_len);
+        if (status != AES_RES_OK)
+        {
+            LOG_DBG("AES error");
+        }
+        else if (dst_addr == device_ptr->device_address || dst_addr == BROADCAST_ADDR)
+        {
+            uint8_t *msg = device_ptr->rx_buffer;
+
+            char log_s[60];
+            snprintf(log_s, 60, "recv msg from %016llx to %016llx", src_addr, dst_addr);
+            LOG_HEXDUMP_DBG(msg, msg_len, log_s);
+
+            rx_work_msg *work_msg = (rx_work_msg *)k_heap_alloc(&device_rx_work_msg_heap, sizeof(rx_work_msg), K_NO_WAIT);
+            if (work_msg != NULL)
+            {
+                memcpy(work_msg->msg, msg, msg_len);
+                work_msg->len = msg_len;
+                work_msg->src_addr = src_addr;
+                work_msg->src_addr = src_addr;
+                work_msg->rx_ts = get_rx_timestamp_u64();
+                k_work_init(&work_msg->work, Device::rx_work_handler);
+                extern struct k_work_q device_rx_work_q;
+                k_work_submit_to_queue(&device_rx_work_q, &work_msg->work);
+            }
+            else
+            {
+                LOG_DBG("heap alloc failed.");
+            }
+        }
+        else
+        {
+            LOG_DBG("The address is not sent to this machine, ignore the message.");
+        }
+        dwt_rxenable(DWT_START_RX_IMMEDIATE);
     }
-    else
-    {
-        LOG_DBG("The address is not sent to this machine, ignore the message.");
-    }
-    dwt_rxenable(DWT_START_RX_IMMEDIATE);
+    k_mutex_unlock(&transceiver_mutex);
 }
 void Device::rx_work_handler(struct k_work *item)
 {
