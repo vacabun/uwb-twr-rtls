@@ -174,7 +174,17 @@ uint64_t Device::tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr, uint8_t 
             dwt_forcetrxoff();
             if (dwt_starttx(mode) == DWT_SUCCESS)
             {
-                waitforsysstatus(NULL, NULL, DWT_INT_TXFRS_BIT_MASK, 0);
+                // waitforsysstatus(NULL, NULL, DWT_INT_TXFRS_BIT_MASK, 0);
+                int64_t current_time_us = k_uptime_get();
+                int64_t timeout_us = current_time_us + 1000;
+                while (!(dwt_readsysstatuslo() & DWT_INT_TXFRS_BIT_MASK))
+                {
+                    if (k_uptime_get() > timeout_us)
+                    {
+                        LOG_DBG("tx finish wait timeout");
+                        break;
+                    }
+                }
                 dwt_writesysstatuslo(DWT_INT_TXFRS_BIT_MASK);
 
                 char log_s[60];
