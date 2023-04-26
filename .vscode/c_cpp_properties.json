@@ -1,7 +1,7 @@
 {
     "env": {
-        "myZephyrSourcePath": "/home/vacabun/Workspace/zephyrproject/zephyr",
-        "myZephyrSDKPath": "/home/vacabun/Workspace/zephyrproject/zephyr-sdk-0.16.0"
+        "myZephyrSourcePath": "/home/vacabun/workspace/zephyrproject/zephyr",
+        "myZephyrSDKPath": "/home/vacabun/workspace/zephyrproject/zephyr-sdk-0.16.0"
     },
     "configurations": [
         {
@@ -15,8 +15,7 @@
                 "${workspaceFolder}/build/zephyr/include/",
                 "${workspaceFolder}/zephyr-dw3000-driver/zephyr/dwt_uwb_driver/inc/",
                 "${workspaceFolder}/zephyr-dw3000-driver/zephyr/platform/",
-                "${workspaceFolder}/include/**",
-                "${workspaceFolder}/build/zephyr/include/generated"
+                "${workspaceFolder}/include/**"
             ],
             "defines": [],
             "compilerPath": "${myZephyrSDKPath}/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc",
