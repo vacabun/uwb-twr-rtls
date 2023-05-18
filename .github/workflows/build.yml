@@ -43,8 +43,8 @@ jobs:
         cd app
         make tag
         cd ..
-    - name: Build anthor
+    - name: Build anchor
       run: |
         cd app
         make clean
-        make anthor
+        make anchor
