@@ -38,5 +38,9 @@ jobs:
         cd app
         git submodule update --init --recursive
         cd ..
-    - name: Build
-      run: west build app
+    - name: Build tag
+      run: make tag
+    - name: Build anthor
+      run: |
+        make clean
+        make anthor
