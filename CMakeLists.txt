@@ -29,6 +29,7 @@ target_sources(app PRIVATE ${ex_sources})
 target_include_directories(app PRIVATE include)
 
 target_compile_definitions(app PRIVATE DS_TWR)
+
 # target_compile_definitions(app PRIVATE SS_TWR)
 
 # target_compile_definitions(app PRIVATE LOG_LEVEL=LOG_LEVEL_INF)
@@ -36,15 +37,18 @@ target_compile_definitions(app PRIVATE LOG_LEVEL=LOG_LEVEL_DBG)
 
 target_compile_definitions(app PRIVATE PAN_ID=0x4321)
 
-# tag
-# target_compile_definitions(app PRIVATE DEVICE_TAG) # daplink
-# target_compile_definitions(app PRIVATE DEVICE_ADDR=0x0000000000000001)
+if(TAG_DEF)
+    message("Build application for tag.")
+    target_compile_definitions(app PRIVATE DEVICE_TAG)
+    target_compile_definitions(app PRIVATE DEVICE_ADDR=0x0000000000000001)
+endif()
 
-# anchor
-target_compile_definitions(app PRIVATE DEVICE_ANCHOR) # stlink
-target_compile_definitions(app PRIVATE DEVICE_ADDR=0x1000000000000001)
+if(ANCHOR_DEF)
+    message("Build application for anthor.")
+    target_compile_definitions(app PRIVATE DEVICE_ANCHOR)
+    target_compile_definitions(app PRIVATE DEVICE_ADDR=0x1000000000000001)
+endif()
 
 target_compile_definitions(app PRIVATE CONFIG_FPU)
 
 target_compile_definitions(app PRIVATE CMAKE_EXPORT_COMPILE_COMMANDS=1)
-
