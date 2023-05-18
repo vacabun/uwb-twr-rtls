@@ -39,7 +39,7 @@ jobs:
         git submodule update --init --recursive
         cd ..
     - name: Build tag
-      run: ｜
+      run: |
         cd app
         make tag
         cd ..
