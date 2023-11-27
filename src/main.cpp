@@ -11,11 +11,10 @@
 
 // use swd debug
 #if CONFIG_DEBUG_SWD == 1
-#include "stm32f4xx_ll_system.h"
+    #include "stm32f4xx_ll_system.h"
 #endif
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart), "Console device is not ACM CDC UART device");
-
 LOG_MODULE_REGISTER(main, LOG_LEVEL);
 
 #define DEFAULT_STACKSIZE 4096
@@ -27,22 +26,15 @@ K_THREAD_STACK_DEFINE(device_rx_work_q_stack_area, DEVICE_RX_WORK_QUEUE_STACK_SI
 struct k_work_q device_rx_work_q;
 
 #if defined(DEVICE_TAG)
-
-#include "device/tag.hpp"
-
-static K_THREAD_STACK_DEFINE(tag_stack, DEFAULT_STACKSIZE);
-static struct k_thread tag_thread;
-
+    #include "device/tag.hpp"
+    static K_THREAD_STACK_DEFINE(tag_stack, DEFAULT_STACKSIZE);
+    static struct k_thread tag_thread;
 #endif // DEVICE_TAG
 
 #if defined(DEVICE_ANCHOR)
-
-#include <device/anthor.hpp>
-
-// main thread
-static K_THREAD_STACK_DEFINE(anthor_responder_stack, DEFAULT_STACKSIZE);
-static struct k_thread anthor_responder_thread;
-
+    #include <device/anthor.hpp>
+    static K_THREAD_STACK_DEFINE(anthor_responder_stack, DEFAULT_STACKSIZE);
+    static struct k_thread anthor_responder_thread;
 #endif // DEVICE_ANCHOR
 
 int main(void)
@@ -57,6 +49,7 @@ int main(void)
 		return 0;
 	k_sleep(K_MSEC(1000));
 
+	/* uart config */
     struct uart_config uart_cfg ={
 		baudrate: 1000000,
 		parity: UART_CFG_PARITY_NONE,
@@ -64,7 +57,6 @@ int main(void)
 		data_bits: UART_CFG_DATA_BITS_8,
 		flow_ctrl: UART_CFG_FLOW_CTRL_NONE
 	};
-
     int ret = uart_configure(DEVICE_DT_GET(DT_ALIAS(serial)), &uart_cfg);
     if (ret != 0)
     {
@@ -74,6 +66,8 @@ int main(void)
 		LOG_DBG("UART configured successfully");
 	}
 
+
+	/* work config */
 	k_work_queue_init(&device_rx_work_q);
 	k_work_queue_start(&device_rx_work_q,
 					   device_rx_work_q_stack_area,

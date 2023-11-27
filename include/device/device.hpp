@@ -14,46 +14,34 @@
 #ifdef __cplusplus
 extern "C"
 {
-#endif
+#endif /* __cplusplus */
+
+#ifdef CONFIG_DW3000
+
 #include "dw3000.h"
+dwt_mic_size_e dwt_mic_size_from_bytes(uint8_t mic_size_in_bytes);
+extern dwt_txconfig_t txconfig_options;
+/* Default antenna delay values for 64 MHz PRF.*/
+#define TX_ANT_DLY 16385
+#define RX_ANT_DLY 16385
+/* Delay tx frames, in UWB microseconds.*/
+#define TX_DLY_UUS 4000
+/* Buffer to store received response message.
+   The received frame cannot be bigger than 127 if STD PHR mode is used */
+#define RX_BUF_LEN 127
+/* Note, the key index of 0 is forbidden to send as key index. Thus index 1 is the first. */
+#define KEY_INDEX 1
+
+#endif /* CONFIG_DW3000 */
+
 #ifdef __cplusplus
 }
-#endif
-
-#include <shared_data/config_options.hpp>
-#include <shared_data/shared_defines.hpp>
-#include <shared_data/shared_functions.hpp>
-#include <network/MAC_802_15_4/mac_802_15_4.hpp>
-#include <network/MAC_802_15_4/key.hpp>
+#endif /* __cplusplus */
 
 #include "msg/twr_poll.hpp"
 #include "msg/twr_response.hpp"
 #include "msg/twr_final.hpp"
 #include "msg/twr_report.hpp"
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-    dwt_mic_size_e dwt_mic_size_from_bytes(uint8_t mic_size_in_bytes);
-#ifdef __cplusplus
-}
-#endif
-extern dwt_txconfig_t txconfig_options;
-
-/* Default antenna delay values for 64 MHz PRF.*/
-#define TX_ANT_DLY 16385
-#define RX_ANT_DLY 16385
-
-/* Delay tx frames, in UWB microseconds.*/
-#define TX_DLY_UUS 4000
-
-/* Buffer to store received response message.
-   The received frame cannot be bigger than 127 if STD PHR mode is used */
-#define RX_BUF_LEN 127
-
-/* Note, the key index of 0 is forbidden to send as key index. Thus index 1 is the first. */
-#define KEY_INDEX 1
 
 #define BROADCAST_ADDR 0x0000000000000000
 

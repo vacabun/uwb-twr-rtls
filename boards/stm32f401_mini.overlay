@@ -85,3 +85,21 @@
 		wakeup-gpios = <&gpiob 3 GPIO_ACTIVE_HIGH>;
 	};
 };
+
+// &spi1 {
+// 	status = "okay";
+// 	cs-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
+// 	pinctrl-0 = <&spi1_sck_pa5 &spi1_nss_pa4
+// 		     &spi1_miso_pa6 &spi1_mosi_pa7>;
+// 	pinctrl-1 = <&spi2_sleep>;
+// 	pinctrl-names = "default", "sleep";
+// 	ieee802154: dw1000@0 {
+// 		compatible = "decawave,dw1000";
+// 		spi-max-frequency = <8000000>;
+// 		int-gpios = <&gpiob 0 GPIO_ACTIVE_HIGH>;
+// 		reset-gpios = <&gpiob 4 GPIO_ACTIVE_LOW>;
+// 		status = "okay";
+// 		reg = <0>;
+// 	};
+// };
+
