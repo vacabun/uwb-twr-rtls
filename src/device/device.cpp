@@ -1,3 +1,15 @@
+#include <zephyr/kernel.h>
+#include <zephyr/sys/printk.h>
+// #include <zephyr/usb/usb_device.h>
+#include <zephyr/drivers/uart.h>
+// #include <zephyr/shell/shell.h>
+#include <zephyr/logging/log.h>
+
+#include "msg/twr_poll.hpp"
+#include "msg/twr_response.hpp"
+#include "msg/twr_final.hpp"
+#include "msg/twr_report.hpp"
+
 #include "device/device.hpp"
 
 LOG_MODULE_REGISTER(device, LOG_LEVEL);
@@ -5,39 +17,38 @@ LOG_MODULE_REGISTER(device, LOG_LEVEL);
 Device *Device::device_ptr = nullptr;
 
 K_HEAP_DEFINE(device_rx_work_msg_heap, 1024);
-
 K_MUTEX_DEFINE(transceiver_mutex);
 
 Device::Device()
 {
+
     device_ptr = this;
     {
-        dw3000_hw_init();
-        dw3000_hw_reset();
-        dw3000_hw_init_interrupt();
-        dw3000_spi_speed_fast();
+        dw_hw_init();
+        dw_hw_reset();
+        dw_hw_init_interrupt();
+        dw_spi_speed_fast();
 
+#if CONFIG_DW3000
         if (dwt_probe((struct dwt_probe_s *)&dw3000_probe_interf) == DWT_ERROR)
         {
             LOG_DBG("DEV Probe FAILED");
         }
         while (!dwt_checkidlerc())
             ;
-        if (dwt_initialise(DWT_DW_INIT) == DWT_ERROR)
+#endif
+
+        if (dwt_initialise(DW_INIT_CONFIG_PARAMETER) == DWT_ERROR)
         {
             LOG_DBG("DEV INIT FAILED");
         }
-        if (dwt_configure(&config))
-        {
-            LOG_DBG("DEV CONFIG FAILED");
-        }
-        else
-            LOG_DBG("DEV CONFIG SUCCEED");
+
+        LOG_DBG("Device ID: 0x%x\n", dwt_readdevid());
 
         k_sleep(K_SECONDS(1));
-
+#if CONFIG_DW3000
         dwt_configuretxrf(&txconfig_options);
-
+#endif
         dwt_setrxantennadelay(RX_ANT_DLY); // set RX antenna delay time
         dwt_settxantennadelay(TX_ANT_DLY); // set TX antenna delay time
 
@@ -46,9 +57,9 @@ Device::Device()
 
         // dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
     }
-
     // dwt config
     {
+#if CONFIG_DW3000
         config.chan = 5;                                                      // Channel number.
         config.txPreambLength = DWT_PLEN_128;                                 // Preamble length. Used in TX only.
         config.rxPAC = DWT_PAC8;                                              // Preamble acquisition chunk size. Used in RX only.
@@ -64,7 +75,24 @@ Device::Device()
         config.pdoaMode = DWT_PDOA_M0;                                        // PDOA mode off
 
         dwt_set_keyreg_128(&keys_options[KEY_INDEX - 1]); // set aes key
+#endif
+#if CONFIG_DW1000
+        config.chan = 5;                      // Channel number.
+        config.prf = DWT_PRF_64M;             // Pulse repetition frequency.
+        config.txPreambLength = DWT_PLEN_128; // Preamble length. Used in TX only.
+        config.rxPAC = DWT_PAC8;              // Preamble acquisition chunk size. Used in RX only.
+        config.txCode = 9;                    // TX preamble code. Used in TX only.
+        config.rxCode = 9;                    // RX preamble code. Used in RX only.
+        config.nsSFD = 1;                     // 0 to use standard SFD, 1 to use non-standard SFD
+        config.dataRate = DWT_BR_6M8;         // Data rate.
+        config.phrMode = DWT_PHRMODE_STD;     // PHY header mode.
+        config.sfdTO = (129 + 8 - 8);         // SFD timeout Used in RX only. (preamble length + 1 + SFD length - PAC size).
+#endif
     }
+
+    dwt_configure(&config);
+
+#if CONFIG_DW3000
     // 802_15_4 frame
     {
         mac_frame.mhr_802_15_4.frame_ctrl[0] = 0x09;
@@ -112,7 +140,9 @@ Device::Device()
         aes_job_tx.mode = AES_Encrypt;
         // aes_job_rx.mic_size
     }
+#endif
     {
+#if CONFIG_DW3000
         dwt_setinterrupt(DWT_INT_RXFCG_BIT_MASK, 0, DWT_ENABLE_INT);
         dwt_setcallbacks(
             nullptr,
@@ -122,22 +152,52 @@ Device::Device()
             nullptr,
             nullptr,
             nullptr);
-        dw3000_hw_interrupt_enable();
+#endif
+#if CONFIG_DW1000
+        dwt_setinterrupt(DWT_INT_RFCG, 1);
+        dwt_setcallbacks(
+            nullptr,
+            &Device::rx_ok_cb,
+            nullptr,
+            nullptr);
+#endif
     }
+
     k_sleep(K_MSEC(100));
     dwt_rxenable(DWT_START_RX_IMMEDIATE);
 
     device_address = DEVICE_ADDR;
     pan_id = PAN_ID;
+
+#if CONFIG_DW1000
+    dwt_setpanid(pan_id);
+    dwt_setaddress16(device_address);
+
+    // set frame type (0-2), SEC (3), Pending (4), ACK (5), PanIDcomp(6)
+    /*frame type 0x1 == data*/ /* 0x20 ACK request*/ /*0x40 PID comp*/
+    msg_f_send.frameCtrl[0] = 0x1 | 0x40;
+    // source/dest addressing modes and frame version
+    msg_f_send.frameCtrl[1] = 0x8 /*dest extended address (16bits)*/ |
+                              0x80 /*src extended address (16bits)*/;
+    msg_f_send.panID[0] = 0xF0;
+    msg_f_send.panID[1] = 0xF0;
+    msg_f_send.sourceAddr[0] = device_address & 0xFF;        // copy the address
+    msg_f_send.sourceAddr[1] = (device_address >> 8) & 0xFF; // copy the address
+
+#endif
+
+    dw1000_hw_interrupt_enable();
 }
 
 void Device::app(void *, void *, void *)
 {
 }
 
-uint64_t Device::tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr, uint8_t mode)
+uint64_t Device::tx_msg(uint8_t *msg, uint16_t len, uint16_t dest_addr, uint8_t mode)
 {
-    mac_frame_set_pan_ids_and_addresses_802_15_4(&mac_frame, pan_id, dest_addr, device_address);
+#if CONFIG_DW3000
+    uint64_t dest_addr_u64 = (uint64_t)dest_addr;
+    mac_frame_set_pan_ids_and_addresses_802_15_4(&mac_frame, pan_id, dest_addr_u64, device_address);
     if (mode == DWT_START_TX_DELAYED)
     {
         uint32_t resp_tx_time = (get_sys_timestamp_u64() + (TX_DLY_UUS * UUS_TO_DWT_TIME)) >> 8;
@@ -188,13 +248,12 @@ uint64_t Device::tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr, uint8_t 
                 dwt_writesysstatuslo(DWT_INT_TXFRS_BIT_MASK);
 
                 char log_s[60];
-                snprintf(log_s, 60, "tx msg from %016llx to %016llx", device_address, dest_addr);
+                snprintf(log_s, 60, "tx msg from %016llx to %016llx", device_address, dest_addr_u64);
                 LOG_HEXDUMP_DBG(msg, len, log_s);
             }
             else
             {
                 LOG_DBG("tx error.");
-
                 return 0;
             }
             tx_ts = get_tx_timestamp_u64();
@@ -203,9 +262,39 @@ uint64_t Device::tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr, uint8_t 
 
             dwt_rxenable(DWT_START_RX_IMMEDIATE);
         }
-        return tx_ts;
         k_mutex_unlock(&transceiver_mutex);
+        return tx_ts;
     }
+#endif
+    msg_f_send.destAddr[0] = dest_addr & 0xFF;
+    msg_f_send.destAddr[1] = (dest_addr >> 8) & 0xFF;
+
+    for (uint16_t i = 0; i < len; i++)
+    {
+        msg_f_send.messageData[i] = msg[i];
+    }
+    uint16_t SendMsgLength = 11 + len;
+    // msg_f_send.seqNum = 0xFF;
+    k_mutex_lock(&transceiver_mutex, K_FOREVER);
+    {
+        if (mode == DWT_START_TX_DELAYED)
+        {
+            uint32 final_tx_time = dwt_readsystimestamphi32() + 0x17cdc00 / 80; // (0x17cdc00 / 80) 10ms/8
+            dwt_setdelayedtrxtime(final_tx_time);
+        }
+
+        dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS);
+        dwt_forcetrxoff();
+        dwt_writetxdata(SendMsgLength, (uint8 *)&msg_f_send, 0);
+        dwt_writetxfctrl(SendMsgLength, 0, 0);
+        dwt_starttx(mode);
+        while ((dwt_read32bitreg(SYS_STATUS_ID) & SYS_STATUS_TXFRS) != SYS_STATUS_TXFRS)
+            ;
+        dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS);
+
+        return get_tx_timestamp_u64();
+    }
+    k_mutex_unlock(&transceiver_mutex);
     return 0;
 }
 
@@ -231,6 +320,7 @@ void Device::tx_done_cb(const dwt_cb_data_t *cb_data)
 
 void Device::rx_ok_cb(const dwt_cb_data_t *cb_data)
 {
+#if CONFIG_DW3000
     k_mutex_lock(&transceiver_mutex, K_NO_WAIT);
     {
         // check sts quality
@@ -301,7 +391,9 @@ void Device::rx_ok_cb(const dwt_cb_data_t *cb_data)
         dwt_rxenable(DWT_START_RX_IMMEDIATE);
     }
     k_mutex_unlock(&transceiver_mutex);
+#endif
 }
+
 void Device::rx_work_handler(struct k_work *item)
 {
     rx_work_msg *work_msg = CONTAINER_OF(item, rx_work_msg, work);

@@ -1,4 +1,6 @@
 #include <device/tag.hpp>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/uart.h>
 
 #if defined(DEVICE_TAG)
 
@@ -20,7 +22,7 @@ Tag::Tag()
 void Tag::app(void *p1, void *p2, void *p3)
 {
     LOG_DBG("Tag app start.");
-
+#if CONFIG_DW3000
     uint64_t dst_addr_list[] = {
         0x1000000000000001,
         0x1000000000000002,
@@ -43,6 +45,32 @@ void Tag::app(void *p1, void *p2, void *p3)
         }
 
         package_res();
+        k_sleep(K_SECONDS(1));
+    }
+#elif CONFIG_DW1000
+
+    /* Write frame data to DW1000 and prepare transmission. See NOTE 4 below.*/
+    uint8 msg[] = {0xC5, 0, 'D', 'E', 'C', 'A', 'W', 'A', 'V', 'E', 0, 0};
+    dwt_writetxdata(sizeof(msg), msg, 0); /* Zero offset in TX buffer. */
+    dwt_writetxfctrl(sizeof(msg), 0, 0);  /* Zero offset in TX buffer, no ranging. */
+    dwt_forcetrxoff();
+    /* Start transmission. */ 
+    dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS);
+    dwt_starttx(DWT_START_TX_IMMEDIATE);
+
+    /* Poll DW1000 until TX frame sent event set. See NOTE 5 below.
+     * STATUS register is 5 bytes long but, as the event we are looking at is in the first byte of the register, we can use this simplest API
+     * function to access it.*/
+    while (!(dwt_read32bitreg(SYS_STATUS_ID) & SYS_STATUS_TXFRS))
+    {
+        // k_sleep(K_SECONDS(1));
+    };
+
+    /* Clear TX frame sent event. */
+    dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS);
+#endif
+    while (1)
+    {
         k_sleep(K_SECONDS(1));
     }
 }
@@ -78,7 +106,7 @@ void Tag::package_res(void)
         },
         (void *)&package_str);
 
-    sprintf(package_str,"]}\r\n");
+    sprintf(package_str, "]}\r\n");
     for (int i = 0; i < strlen(package_str); i++)
     {
         char c = package_str[i];
@@ -100,6 +128,7 @@ int64_t Tag::dw_ts_reduce(uint64_t a, uint64_t b)
 }
 void Tag::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_addr, uint64_t dst_addr, uint64_t rx_ts)
 {
+#if CONFIG_DW3000
     switch (msg_recv[0])
     {
 #if defined(SS_TWR)
@@ -185,6 +214,7 @@ void Tag::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_
     }
 #endif
     }
+#endif
 }
 
 #endif
