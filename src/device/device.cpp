@@ -25,9 +25,10 @@ Device::Device()
         dw_hw_init();
         dw_hw_reset();
         dw_hw_init_interrupt();
+#if CONFIG_DW1000
         dw1000_hw_interrupt_enable();
         dw1000_spi_speed_fast();
-
+#endif
 #if CONFIG_DW3000
         if (dwt_probe((struct dwt_probe_s *)&dw3000_probe_interf) == DWT_ERROR)
         {
@@ -36,14 +37,18 @@ Device::Device()
         while (!dwt_checkidlerc())
             ;
 #endif
+#if CONFIG_DW1000
         dw1000_spi_speed_slow();
+#endif
         if (dwt_initialise(DW_INIT_CONFIG_PARAMETER) == DWT_ERROR)
         {
             LOG_DBG("DEV INIT FAILED");
         }
 
         LOG_INF("Device ID: 0x%lx", dwt_readdevid());
+#if CONFIG_DW1000
         dw1000_spi_speed_fast();
+#endif
         k_sleep(K_MSEC(100));
 #if CONFIG_DW3000
         dwt_configuretxrf(&txconfig_options);
@@ -163,13 +168,13 @@ Device::Device()
     k_sleep(K_MSEC(100));
 
     device_address = DEVICE_ADDR;
-    device_address16 = device_address & 0xFFFF;
     pan_id = PAN_ID;
 
     LOG_INF("pan_id: %04X", pan_id);
     LOG_INF("device_address: %016llX", device_address);
 
 #if CONFIG_DW1000
+    device_address16 = device_address & 0xFFFF;
     LOG_INF("device_address16: %04X", device_address16);
     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
     dwt_setpanid(pan_id);
@@ -267,6 +272,7 @@ uint64_t Device::tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr, uint8_t 
 
     return 0;
 #endif
+#if CONFIG_DW1000
     uint64_t tx_ts = 0;
     uint16_t dest_addr_16 = dest_addr & 0xFFFF;
 
@@ -302,6 +308,7 @@ uint64_t Device::tx_msg(uint8_t *msg, uint16_t len, uint64_t dest_addr, uint8_t 
     k_mutex_unlock(&transceiver_mutex);
     dwt_rxenable(DWT_START_RX_IMMEDIATE);
     return tx_ts;
+#endif
 }
 
 void Device::set_msg_dly_ts(uint8_t *msg, uint16_t len, uint64_t ts)
@@ -322,7 +329,6 @@ void Device::set_msg_dly_ts(uint8_t *msg, uint16_t len, uint64_t ts)
 void Device::tx_done_cb(const dwt_cb_data_t *cb_data)
 {
     // LOG_DBG("TX done");
-    dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS);
 }
 
 void Device::rx_ok_cb(const dwt_cb_data_t *cb_data)
@@ -401,7 +407,7 @@ void Device::rx_ok_cb(const dwt_cb_data_t *cb_data)
 #if CONFIG_DW1000
 
         uint64_t rx_ts = get_rx_timestamp_u64();
-        
+
         dwt_readrxdata(device_ptr->rx_buffer, cb_data->datalength, 0);
 
         DWT_MSG_TYPR *rx_msg = (DWT_MSG_TYPR *)device_ptr->rx_buffer;

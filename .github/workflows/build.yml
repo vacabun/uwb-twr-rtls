@@ -41,6 +41,12 @@ jobs:
     - name: Build tag(dw1000)
       run: |
         cd app
+        if grep -q 'CONFIG_DW3000=y' prj.conf; then
+          sed -i 's/CONFIG_DW3000=y/CONFIG_DW3000=n/g' prj.conf
+        fi
+        if grep -q 'CONFIG_DW1000=n' prj.conf; then
+          sed -i 's/CONFIG_DW1000=n/CONFIG_DW1000=y/g' prj.conf
+        fi
         make clean
         make dw1000
         make tag
@@ -48,6 +54,12 @@ jobs:
     - name: Build anchor(dw1000)
       run: |
         cd app
+        if grep -q 'CONFIG_DW3000=y' prj.conf; then
+          sed -i 's/CONFIG_DW3000=y/CONFIG_DW3000=n/g' prj.conf
+        fi
+        if grep -q 'CONFIG_DW1000=n' prj.conf; then
+          sed -i 's/CONFIG_DW1000=n/CONFIG_DW1000=y/g' prj.conf
+        fi
         make clean
         make dw1000
         make anchor
@@ -55,6 +67,12 @@ jobs:
     - name: Build node(dw1000)
       run: |
           cd app
+          if grep -q 'CONFIG_DW3000=y' prj.conf; then
+            sed -i 's/CONFIG_DW3000=y/CONFIG_DW3000=n/g' prj.conf
+          fi
+          if grep -q 'CONFIG_DW1000=n' prj.conf; then
+            sed -i 's/CONFIG_DW1000=n/CONFIG_DW1000=y/g' prj.conf
+          fi
           make clean
           make dw1000
           make node
@@ -62,6 +80,12 @@ jobs:
     - name: Build tag(dw3000)
       run: |
         cd app
+        if grep -q 'CONFIG_DW3000=n' prj.conf; then
+          sed -i 's/CONFIG_DW3000=n/CONFIG_DW3000=y/g' prj.conf
+        fi
+        if grep -q 'CONFIG_DW1000=y' prj.conf; then
+          sed -i 's/CONFIG_DW1000=y/CONFIG_DW1000=n/g' prj.conf
+        fi
         make clean
         make dw3000
         make tag
@@ -69,6 +93,12 @@ jobs:
     - name: Build anchor(dw3000)
       run: |
         cd app
+        if grep -q 'CONFIG_DW3000=n' prj.conf; then
+          sed -i 's/CONFIG_DW3000=n/CONFIG_DW3000=y/g' prj.conf
+        fi
+        if grep -q 'CONFIG_DW1000=y' prj.conf; then
+          sed -i 's/CONFIG_DW1000=y/CONFIG_DW1000=n/g' prj.conf
+        fi
         make clean
         make dw3000
         make anchor
@@ -76,6 +106,12 @@ jobs:
     - name: Build node(dw3000)
       run: |
         cd app
+        if grep -q 'CONFIG_DW3000=n' prj.conf; then
+          sed -i 's/CONFIG_DW3000=n/CONFIG_DW3000=y/g' prj.conf
+        fi
+        if grep -q 'CONFIG_DW1000=y' prj.conf; then
+          sed -i 's/CONFIG_DW1000=y/CONFIG_DW1000=n/g' prj.conf
+        fi
         make clean
         make dw3000
         make node
