@@ -1,9 +1,21 @@
 clean:
 	rm -rf $(CURDIR)/build
 dw1000:
-	cp boards/stm32f401_mini_dw1000.overlay boards/stm32f401_mini.overlay
+	cp $(CURDIR)/boards/stm32f401_mini_dw1000.overlay $(CURDIR)/boards/stm32f401_mini.overlay
+	if grep -q 'CONFIG_DW3000=y' $(CURDIR)/prj.conf; then \
+		sed -i 's/CONFIG_DW3000=y/CONFIG_DW3000=n/g' prj.conf; \
+	fi
+	if grep -q 'CONFIG_DW1000=n' $(CURDIR)/prj.conf; then \
+		sed -i 's/CONFIG_DW1000=n/CONFIG_DW1000=y/g' prj.conf; \
+	fi
 dw3000:
-	cp boards/stm32f401_mini_dw3000.overlay boards/stm32f401_mini.overlay
+	cp $(CURDIR)/boards/stm32f401_mini_dw3000.overlay $(CURDIR)/boards/stm32f401_mini.overlay
+	if grep -q 'CONFIG_DW3000=n' $(CURDIR)/prj.conf; then \
+		sed -i 's/CONFIG_DW3000=n/CONFIG_DW3000=y/g' prj.conf; \
+	fi
+	if grep -q 'CONFIG_DW1000=y' $(CURDIR)/prj.conf; then \
+		sed -i 's/CONFIG_DW1000=y/CONFIG_DW1000=n/g' prj.conf; \
+	fi
 tag:
 	west build -- -DTAG_DEF=ON -DANCHOR_DEF=OFF -DNODE_DEF=OFF
 anchor:
