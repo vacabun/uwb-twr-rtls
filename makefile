@@ -1,10 +1,8 @@
 clean:
 	rm -rf $(CURDIR)/build
 dw1000:
-	rm boards/stm32f401_mini.overlay
 	cp boards/stm32f401_mini_dw1000.overlay boards/stm32f401_mini.overlay
 dw3000:
-	rm boards/stm32f401_mini.overlay
 	cp boards/stm32f401_mini_dw3000.overlay boards/stm32f401_mini.overlay
 tag:
 	west build -- -DTAG_DEF=ON -DANCHOR_DEF=OFF
