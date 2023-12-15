@@ -11,7 +11,7 @@
 LOG_MODULE_REGISTER(anthor, LOG_LEVEL);
 #if defined(DS_TWR)
 
-SYS_HASHMAP_DEFAULT_DEFINE_STATIC(response_tx_ts_map);
+SYS_HASHMAP_DEFINE_STATIC(response_tx_ts_map);
 
 #endif
 Anthor::Anthor()
@@ -34,12 +34,14 @@ void Anthor::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t s
     {
 #if defined(SS_TWR)
     case (MSG_TWR_POLL):
+    {
         msg::twr_response msg;
         msg.poll_rx_ts = rx_ts;
 
         tx_msg((uint8_t *)&msg, sizeof(msg), src_addr, DWT_START_TX_DELAYED);
 
         break;
+    }
 
 #endif
 

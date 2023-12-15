@@ -37,6 +37,12 @@ struct k_work_q device_rx_work_q;
     static struct k_thread anthor_responder_thread;
 #endif // DEVICE_ANCHOR
 
+#if defined(DEVICE_NODE)
+    #include <device/node.hpp>
+    static K_THREAD_STACK_DEFINE(node_responder_stack, DEFAULT_STACKSIZE);
+    static struct k_thread node_responder_thread;
+#endif // DEVICE_NODE
+
 int main(void)
 {
 	// swd debug
@@ -121,6 +127,31 @@ int main(void)
 		},
 		&func,
 		&anthor_responder_thread,
+		NULL,
+		K_PRIO_COOP(7),
+		0,
+		K_NO_WAIT);
+#endif // _DEVICE_ANCHOR_
+#if defined(DEVICE_NODE)
+	Node node;
+
+	std::function<void(void *, void *, void *)> func = [&](void *arg1, void *arg2, void *arg3)
+	{
+		node.app(arg1, arg2, arg3);
+	};
+
+	k_thread_create(
+		&node_responder_thread,
+		node_responder_stack,
+		DEFAULT_STACKSIZE,
+		[](void *arg1, void *arg2, void *arg3)
+		{
+			std::function<void(void *, void *, void *)> *func_ptr =
+				static_cast<std::function<void(void *, void *, void *)> *>(arg1);
+			(*func_ptr)(arg2, arg3, nullptr);
+		},
+		&func,
+		&node_responder_thread,
 		NULL,
 		K_PRIO_COOP(7),
 		0,

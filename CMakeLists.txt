@@ -51,6 +51,13 @@ if(ANCHOR_DEF)
     target_compile_definitions(app PRIVATE DEVICE_ADDR=0x0000000000001001)
 endif()
 
+if(NODE_DEF)
+    message("Build application for tag.")
+    target_compile_definitions(app PRIVATE DEVICE_NODE)
+    # target_compile_definitions(app PRIVATE DEVICE_ADDR=0x0000000000000001)
+    target_compile_definitions(app PRIVATE DEVICE_ADDR=0x0000000000001001)
+endif()
+
 target_compile_definitions(app PRIVATE CONFIG_FPU)
 
 target_compile_definitions(app PRIVATE CMAKE_EXPORT_COMPILE_COMMANDS=1)
