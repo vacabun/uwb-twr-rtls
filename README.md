@@ -10,11 +10,11 @@ This project implements the following features:
 - Using Qorvo/Decawave DW3000/DW1000 UWB radios.
 - Based on Zephyr RTOS.
 - Using IEEE 802.15.4 standard data frame.
-- Devices can be easily configured as anchor, tag or node.
+- Devices can be easily configured as anchor tag or node.
 
 ## System Components
 
-Device is divided into anchor, tag and node.
+Device is divided into anchor tag and node.
 
 ## Hardware
 
