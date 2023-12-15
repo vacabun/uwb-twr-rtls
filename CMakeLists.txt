@@ -37,18 +37,18 @@ target_compile_definitions(app PRIVATE DS_TWR)
 # target_compile_definitions(app PRIVATE LOG_LEVEL=LOG_LEVEL_INF)
 target_compile_definitions(app PRIVATE LOG_LEVEL=LOG_LEVEL_DBG)
 
-target_compile_definitions(app PRIVATE PAN_ID=0x4321)
+target_compile_definitions(app PRIVATE PAN_ID=0xAAAA)
 
 if(TAG_DEF)
     message("Build application for tag.")
     target_compile_definitions(app PRIVATE DEVICE_TAG)
-    target_compile_definitions(app PRIVATE DEVICE_ADDR=0x0001)
+    target_compile_definitions(app PRIVATE DEVICE_ADDR=0x0000000000000001)
 endif()
 
 if(ANCHOR_DEF)
     message("Build application for anthor.")
     target_compile_definitions(app PRIVATE DEVICE_ANCHOR)
-    target_compile_definitions(app PRIVATE DEVICE_ADDR=0x1001)
+    target_compile_definitions(app PRIVATE DEVICE_ADDR=0x0000000000001001)
 endif()
 
 target_compile_definitions(app PRIVATE CONFIG_FPU)

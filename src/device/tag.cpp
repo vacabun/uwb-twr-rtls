@@ -1,6 +1,14 @@
-#include <device/tag.hpp>
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/uart.h>
+
+#include <msg/twr_poll.hpp>
+#include <msg/twr_report.hpp>
+#include <msg/twr_response.hpp>
+#include <msg/twr_final.hpp>
+
+#include <device/tag.hpp>
+
+#define SPEED_OF_LIGHT (299702547)
 
 #if defined(DEVICE_TAG)
 
@@ -22,55 +30,25 @@ Tag::Tag()
 void Tag::app(void *p1, void *p2, void *p3)
 {
     LOG_DBG("Tag app start.");
-#if CONFIG_DW3000
-    uint64_t dst_addr_list[] = {
-        0x1000000000000001,
-        0x1000000000000002,
-        0x1000000000000003};
-    uint8_t dst_addr_list_size = sizeof(dst_addr_list) / (sizeof(uint64_t));
 
+    uint64_t dst_addr_list[] = {
+        0x0000000000001001, 0x0000000000001002};
     while (1)
     {
         sys_hashmap_clear(&poll_tx_ts_map, NULL, NULL);
         sys_hashmap_clear(&measure_res, NULL, NULL);
 
-        for (int i = 0; i < dst_addr_list_size; i++)
+        for (int i = 0; i < sizeof(dst_addr_list) / sizeof(uint64_t); i++)
         {
+
             msg::twr_poll msg;
             uint64_t dst_addr = dst_addr_list[i];
             uint64_t tx_ts = tx_msg((uint8_t *)&msg, sizeof(msg), dst_addr, DWT_START_TX_IMMEDIATE);
             sys_hashmap_insert(&poll_tx_ts_map, dst_addr, tx_ts, NULL);
-
-            k_sem_take(&measure_finish_sem, K_MSEC(100));
+            k_sem_take(&measure_finish_sem, K_SECONDS(1));
         }
 
         package_res();
-        k_sleep(K_SECONDS(1));
-    }
-#elif CONFIG_DW1000
-
-    /* Write frame data to DW1000 and prepare transmission. See NOTE 4 below.*/
-    uint8 msg[] = {0xC5, 0, 'D', 'E', 'C', 'A', 'W', 'A', 'V', 'E', 0, 0};
-    dwt_writetxdata(sizeof(msg), msg, 0); /* Zero offset in TX buffer. */
-    dwt_writetxfctrl(sizeof(msg), 0, 0);  /* Zero offset in TX buffer, no ranging. */
-    dwt_forcetrxoff();
-    /* Start transmission. */ 
-    dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS);
-    dwt_starttx(DWT_START_TX_IMMEDIATE);
-
-    /* Poll DW1000 until TX frame sent event set. See NOTE 5 below.
-     * STATUS register is 5 bytes long but, as the event we are looking at is in the first byte of the register, we can use this simplest API
-     * function to access it.*/
-    while (!(dwt_read32bitreg(SYS_STATUS_ID) & SYS_STATUS_TXFRS))
-    {
-        // k_sleep(K_SECONDS(1));
-    };
-
-    /* Clear TX frame sent event. */
-    dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS);
-#endif
-    while (1)
-    {
         k_sleep(K_SECONDS(1));
     }
 }
@@ -102,7 +80,7 @@ void Tag::package_res(void)
                 uart_poll_out(DEVICE_DT_GET(DT_ALIAS(serial)), (uint8_t)c);
             }
 
-            // LOG_DBG("\"addr\":\"%016llx\",\"distance\":%lld", anthor_addr, distance);
+            LOG_DBG("\"addr\":\"%016llx\",\"distance\":%lld", anthor_addr, distance);
         },
         (void *)&package_str);
 
@@ -128,12 +106,12 @@ int64_t Tag::dw_ts_reduce(uint64_t a, uint64_t b)
 }
 void Tag::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_addr, uint64_t dst_addr, uint64_t rx_ts)
 {
-#if CONFIG_DW3000
     switch (msg_recv[0])
     {
 #if defined(SS_TWR)
     case (MSG_TWR_RESPONSE):
     {
+
         msg::twr_response *msg = (msg::twr_response *)msg_recv;
 
         uint64_t poll_tx_ts;
@@ -166,7 +144,6 @@ void Tag::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_
     case (MSG_TWR_RESPONSE):
     {
         msg::twr_response *msg = (msg::twr_response *)msg_recv;
-
         sys_hashmap_insert(&poll_rx_ts_map, src_addr, msg->poll_rx_ts, NULL);
         sys_hashmap_insert(&resp_rx_ts_map, src_addr, rx_ts, NULL);
 
@@ -188,6 +165,12 @@ void Tag::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_
         uint64_t resp_rx_ts;
         uint64_t final_tx_ts;
         uint64_t final_rx_ts = msg->final_rx_ts;
+        // LOG_DBG("poll_tx_ts %lld", poll_tx_ts);
+        // LOG_DBG("poll_rx_ts %lld", poll_rx_ts);
+        // LOG_DBG("resp_tx_ts %lld", resp_tx_ts);
+        // LOG_DBG("resp_rx_ts %lld", resp_rx_ts);
+        // LOG_DBG("final_tx_ts %lld", final_tx_ts);
+        // LOG_DBG("final_rx_ts %lld", final_rx_ts);
 
         sys_hashmap_get(&poll_tx_ts_map, src_addr, &poll_tx_ts);
         sys_hashmap_get(&poll_rx_ts_map, src_addr, &poll_rx_ts);
@@ -208,13 +191,12 @@ void Tag::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_
 
         sys_hashmap_insert(&measure_res, src_addr, (uint64_t)(distance * 1000), NULL);
 
-        LOG_INF("distance from %016llx to %016llx is %lf", src_addr, device_address, distance);
+        LOG_INF("distance from %016llx to %016llx is %lfcm", src_addr, device_address, distance);
 
         k_sem_give(&measure_finish_sem);
     }
 #endif
     }
-#endif
 }
 
 #endif

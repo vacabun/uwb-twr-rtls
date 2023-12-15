@@ -1,4 +1,10 @@
+#include <zephyr/logging/log.h>
 #include <device/anthor.hpp>
+
+#include <msg/twr_poll.hpp>
+#include <msg/twr_final.hpp>
+#include <msg/twr_response.hpp>
+#include <msg/twr_report.hpp>
 
 #if defined(DEVICE_ANCHOR)
 
@@ -16,13 +22,13 @@ void Anthor::app(void *p1, void *p2, void *p3)
     LOG_DBG("Anthor app start.");
     while (1)
     {
-        dwt_rxenable(DWT_START_RX_IMMEDIATE);
         k_sleep(K_SECONDS(1));
     }
 }
 
 void Anthor::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_addr, uint64_t dst_addr, uint64_t rx_ts)
 {
+    LOG_DBG("msg_process_cb %016llx %016llx %d", src_addr, dst_addr, msg_recv[0]);
 
     switch (msg_recv[0])
     {
