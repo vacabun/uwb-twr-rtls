@@ -38,13 +38,45 @@ jobs:
         cd app
         git submodule update --init --recursive
         cd ..
-    - name: Build tag
-      run: |
-        cd app
-        make tag
-        cd ..
-    - name: Build anchor
+    - name: Build tag(dw1000)
       run: |
         cd app
         make clean
+        make dw1000
+        make tag
+        cd ..
+    - name: Build anchor(dw1000)
+      run: |
+        cd app
+        make clean
+        make dw1000
         make anchor
+        cd ..
+    - name: Build node(dw1000)
+      run: |
+          cd app
+          make clean
+          make dw1000
+          make node
+          cd ..
+    - name: Build tag(dw3000)
+      run: |
+        cd app
+        make clean
+        make dw3000
+        make tag
+        cd ..
+    - name: Build anchor(dw3000)
+      run: |
+        cd app
+        make clean
+        make dw3000
+        make anchor
+        cd ..
+    - name: Build node(dw3000)
+      run: |
+        cd app
+        make clean
+        make dw3000
+        make node
+        cd ..
