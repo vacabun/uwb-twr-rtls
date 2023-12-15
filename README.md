@@ -1,6 +1,8 @@
 # UWB-TWR-RTLS
-![build workflow](https://github.com/vacabun/uwb-twr-rtls/actions/workflows/build.yml/badge.svg)
+
 An UWB Real-Time Location System (RTLS). 
+
+![build workflow](https://github.com/vacabun/uwb-twr-rtls/actions/workflows/build.yml/badge.svg)
 
 ## Features
 This project implements the following features:
