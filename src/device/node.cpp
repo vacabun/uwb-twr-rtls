@@ -1,6 +1,8 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/sys/hash_map.h>
+#include <zephyr/data/json.h>
+#include <zephyr/sys/ring_buffer.h>
 
 #include <msg/twr_poll.hpp>
 #include <msg/twr_report.hpp>
@@ -25,29 +27,108 @@ SYS_HASHMAP_DEFINE_STATIC(final_tx_ts_map);
 SYS_HASHMAP_DEFINE_STATIC(measure_res);
 K_SEM_DEFINE(measure_finish_sem, 0, 1);
 
+struct ring_buf serial_rx_ring_buf;
+
 Node::Node()
 {
 }
 
+struct command
+{
+    int type;
+    const char *p1;
+    const char *p2;
+};
+
+static const struct json_obj_descr command_descr[] = {
+    JSON_OBJ_DESCR_PRIM(struct command, type, JSON_TOK_NUMBER),
+    JSON_OBJ_DESCR_PRIM(struct command, p1, JSON_TOK_STRING),
+    JSON_OBJ_DESCR_PRIM(struct command, p2, JSON_TOK_STRING),
+};
+
 void Node::app(void *p1, void *p2, void *p3)
 {
     LOG_DBG("Node app start.");
-    uint64_t dst_addr_list[] = {0x0000000000001001, 0x0000000000001002};
+
+    const struct device *dev = DEVICE_DT_GET(DT_ALIAS(serial));
+    uart_irq_callback_user_data_set(dev, &Node::serial_isr, NULL);
+    uart_irq_rx_enable(dev);
+
+    ring_buf_init(&serial_rx_ring_buf, RING_BUF_SIZE, (uint8_t *)malloc(RING_BUF_SIZE));
+
     while (1)
     {
-        sys_hashmap_clear(&poll_tx_ts_map, NULL, NULL);
-        sys_hashmap_clear(&measure_res, NULL, NULL);
 
-        for (uint16_t i = 0; i < sizeof(dst_addr_list) / sizeof(uint64_t); i++)
+        if (ring_buf_space_get(&serial_rx_ring_buf) < RING_BUF_SIZE)
         {
+            uint8_t tmp_buf[128];
+            int len = ring_buf_get(&serial_rx_ring_buf, tmp_buf, sizeof(tmp_buf) - 1);
+            if (json_buf_len + len < JSON_BUF_SIZE)
+            {
+                memcpy(json_buf + json_buf_len, tmp_buf, len);
+                json_buf_len += len;
+                json_buf[json_buf_len] = '\0';
 
-            msg::twr_poll msg;
-            uint64_t dst_addr = dst_addr_list[i];
-            uint64_t tx_ts = tx_msg((uint8_t *)&msg, sizeof(msg), dst_addr, DWT_START_TX_IMMEDIATE);
-            sys_hashmap_insert(&poll_tx_ts_map, dst_addr, tx_ts, NULL);
-            k_sem_take(&measure_finish_sem, K_SECONDS(1));
+                // Try to parse JSON
+                int ret = parse_json(json_buf, json_buf_len);
+                if (ret == 0)
+                {
+                    // JSON parsed successfully, clear the buffer
+                    json_buf_len = 0;
+                }
+                else if (ret == -1)
+                {
+                    // JSON is incomplete, keep the data in the buffer
+                }
+                else
+                {
+                    // Error occurred, clear the buffer
+                    json_buf_len = 0;
+                }
+            }
+            else
+            {
+                // Buffer is full, clear it
+                json_buf_len = 0;
+            }
         }
+
         k_sleep(K_SECONDS(1));
+    }
+}
+int Node::parse_json(uint8_t *json_buf, size_t json_buf_len)
+{
+    struct command cmd_results;
+    int ret = json_obj_parse((char *)json_buf, json_buf_len,
+                             command_descr,
+                             ARRAY_SIZE(command_descr),
+                             &cmd_results);
+
+    if (ret < 0)
+    {
+        LOG_ERR("JSON Parse Error: %d", ret);
+    }
+    else
+    {
+        LOG_INF("json_obj_parse return code: %d", ret);
+        
+        LOG_INF("type: %d", cmd_results.type);
+        LOG_INF("p1: %s", cmd_results.p1);
+        LOG_INF("p2: %s", cmd_results.p2);
+
+    }
+    return ret;
+}
+void Node::serial_isr(const struct device *dev, void *user_data)
+{
+    while (uart_irq_update(dev) && uart_irq_is_pending(dev))
+    {
+        if (uart_irq_rx_ready(dev))
+        {
+            uint8_t ch;
+            uart_fifo_read(dev, &ch, 1);
+            ring_buf_put(&serial_rx_ring_buf, &ch, 1);
+        }
     }
 }
 
@@ -64,6 +145,7 @@ int64_t Node::dw_ts_reduce(uint64_t a, uint64_t b)
         return (int64_t)a - (int64_t)b;
     }
 }
+
 void Node::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_addr, uint64_t dst_addr, uint64_t rx_ts)
 {
     switch (msg_recv[0])

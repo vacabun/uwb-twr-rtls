@@ -57,7 +57,7 @@ int main(void)
 
 	/* uart config */
     struct uart_config uart_cfg ={
-		baudrate: 1000000,
+		baudrate: 115200,
 		parity: UART_CFG_PARITY_NONE,
 		stop_bits: UART_CFG_STOP_BITS_1,
 		data_bits: UART_CFG_DATA_BITS_8,

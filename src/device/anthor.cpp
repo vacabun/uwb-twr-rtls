@@ -22,6 +22,15 @@ void Anthor::app(void *p1, void *p2, void *p3)
     LOG_DBG("Anthor app start.");
     while (1)
     {
+#if CONFIG_DW1000
+        // extern k_mutex transceiver_mutex;
+        // k_mutex_lock(&transceiver_mutex, K_NO_WAIT);
+        // {
+        //     dwt_forcetrxoff();
+        //     dwt_rxenable(DWT_START_RX_IMMEDIATE);
+        // }
+        // k_mutex_unlock(&transceiver_mutex);
+#endif
         k_sleep(K_SECONDS(1));
     }
 }

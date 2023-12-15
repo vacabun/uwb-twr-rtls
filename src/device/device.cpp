@@ -56,7 +56,7 @@ Device::Device()
         dwt_setrxantennadelay(RX_ANT_DLY); // set RX antenna delay time
         dwt_settxantennadelay(TX_ANT_DLY); // set TX antenna delay time
 
-        // dwt_setrxaftertxdelay(0);
+        dwt_setrxaftertxdelay(0);
         dwt_setrxtimeout(0);
     }
     // dwt config

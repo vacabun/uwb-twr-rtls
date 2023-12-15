@@ -11,6 +11,4 @@ enum msg_type_def
     MSG_TWR_REPORT,
 };
 
-
-
 #endif

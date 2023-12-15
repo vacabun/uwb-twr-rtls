@@ -23,7 +23,7 @@ anchor:
 node:
 	west build -- -DTAG_DEF=OFF -DANCHOR_DEF=OFF -DNODE_DEF=ON
 test:
-	west build -- -DTAG_DEF=ON -DANCHOR_DEF=OFF
+	west build -- -DTAG_DEF=ON -DANCHOR_DEF=OFF -DNODE_DEF=OFF
 	west flash -r openocd --config boards/stlink.cfg
-	west build -- -DTAG_DEF=OFF -DANCHOR_DEF=ON
+	west build -- -DTAG_DEF=OFF -DANCHOR_DEF=ON -DNODE_DEF=OFF
 	west flash -r openocd --config boards/daplink.cfg
