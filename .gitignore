@@ -3,3 +3,4 @@ build
 .vscode/.cortex-debug.registers.state.json
 .DS_Store
 *.DS_Store
+board/stm32f401_mini.overlay
