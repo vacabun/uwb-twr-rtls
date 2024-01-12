@@ -2,7 +2,7 @@ clean:
 	rm -rf $(CURDIR)/build
 	rm prj.conf
 	rm prj.conf.template
-	rm boards/stm32f401_mini.overlay
+	rm -f boards/stm32f401_mini.overlay
 dw1000:
 	cp $(CURDIR)/boards/stm32f401_mini_dw1000.overlay $(CURDIR)/boards/stm32f401_mini.overlay
 	cp $(CURDIR)/prj.conf.dw1000 $(CURDIR)/prj.conf.template
