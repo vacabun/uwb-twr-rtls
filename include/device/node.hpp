@@ -1,7 +1,7 @@
 #ifndef _NODE_HPP_
 #define _NODE_HPP_
 
-#if defined(DEVICE_NODE)
+#if CONFIG_DEVICE_TYPE_NODE
 
 #include "device/device.hpp"
 #include <zephyr/sys/ring_buffer.h>

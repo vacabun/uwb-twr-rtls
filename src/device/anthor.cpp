@@ -6,7 +6,7 @@
 #include <msg/twr_response.hpp>
 #include <msg/twr_report.hpp>
 
-#if defined(DEVICE_ANCHOR)
+#if CONFIG_DEVICE_TYPE_ANCHOR
 
 LOG_MODULE_REGISTER(anthor, LOG_LEVEL);
 #if defined(DS_TWR)
@@ -30,6 +30,9 @@ void Anthor::app(void *p1, void *p2, void *p3)
         //     dwt_rxenable(DWT_START_RX_IMMEDIATE);
         // }
         // k_mutex_unlock(&transceiver_mutex);
+#endif
+#if CONFIG_DW3000
+        dwt_rxenable(DWT_START_RX_IMMEDIATE);
 #endif
         k_sleep(K_SECONDS(1));
     }

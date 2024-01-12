@@ -1,5 +1,22 @@
-config DEBUG_SWD
-	bool "Enable usage debug via swd in wfi mode"
-	default y
 
-source "Kconfig.zephyr"
+config DEVICE_ADDRESS
+	int "address of the device"
+	default 0
+config DEVICE_PANID
+    int "PAN ID of the device"
+    default 1
+
+choice
+    prompt "Device Type"
+    default DEVICE_TYPE_NODE
+    config DEVICE_TYPE_NODE
+        bool "Node"
+    config DEVICE_TYPE_TAG
+        bool "Tag"
+    config DEVICE_TYPE_ANCHOR
+        bool "Anchor"
+endchoice
+
+menu "Zephyr options"
+    source "Kconfig.zephyr"
+endmenu

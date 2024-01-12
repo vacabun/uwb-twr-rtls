@@ -1,7 +1,7 @@
 #ifndef _TAG_HPP_
 #define _TAG_HPP_
 
-#if defined(DEVICE_TAG)
+#if CONFIG_DEVICE_TYPE_TAG
 
 #include "device/device.hpp"
 #include <zephyr/sys/hash_map.h>

@@ -45,7 +45,7 @@ Device::Device()
             LOG_DBG("DEV INIT FAILED");
         }
 
-        LOG_INF("Device ID: 0x%lx", dwt_readdevid());
+        LOG_INF("Device ID: 0x%x", dwt_readdevid());
 #if CONFIG_DW1000
         dw1000_spi_speed_fast();
 #endif
@@ -167,8 +167,8 @@ Device::Device()
 
     k_sleep(K_MSEC(100));
 
-    device_address = DEVICE_ADDR;
-    pan_id = PAN_ID;
+    device_address = CONFIG_DEVICE_ADDRESS;
+    pan_id = CONFIG_DEVICE_PANID;
 
     LOG_INF("pan_id: %04X", pan_id);
     LOG_INF("device_address: %016llX", device_address);

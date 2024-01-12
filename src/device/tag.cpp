@@ -10,7 +10,7 @@
 
 #define SPEED_OF_LIGHT (299702547)
 
-#if defined(DEVICE_TAG)
+#if CONFIG_DEVICE_TYPE_TAG
 
 LOG_MODULE_REGISTER(tag, LOG_LEVEL);
 
@@ -191,7 +191,7 @@ void Tag::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_
 
         sys_hashmap_insert(&measure_res, src_addr, (uint64_t)(distance * 1000), NULL);
 
-        LOG_INF("distance from %016llx to %016llx is %lfcm", src_addr, device_address, distance);
+        LOG_INF("distance from %016llx to %016llx is %lfm", src_addr, device_address, distance);
 
         k_sem_give(&measure_finish_sem);
     }

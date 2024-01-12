@@ -10,9 +10,8 @@
 #include <zephyr/drivers/uart.h>
 
 // use swd debug
-#if CONFIG_DEBUG_SWD == 1
-    #include "stm32f4xx_ll_system.h"
-#endif
+#include "stm32f4xx_ll_system.h"
+
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart), "Console device is not ACM CDC UART device");
 LOG_MODULE_REGISTER(main, LOG_LEVEL);
@@ -25,30 +24,29 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL);
 K_THREAD_STACK_DEFINE(device_rx_work_q_stack_area, DEVICE_RX_WORK_QUEUE_STACK_SIZE);
 struct k_work_q device_rx_work_q;
 
-#if defined(DEVICE_TAG)
+#if CONFIG_DEVICE_TYPE_TAG
     #include "device/tag.hpp"
     static K_THREAD_STACK_DEFINE(tag_stack, DEFAULT_STACKSIZE);
     static struct k_thread tag_thread;
-#endif // DEVICE_TAG
+#endif
 
-#if defined(DEVICE_ANCHOR)
+#if CONFIG_DEVICE_TYPE_ANCHOR
     #include <device/anthor.hpp>
     static K_THREAD_STACK_DEFINE(anthor_responder_stack, DEFAULT_STACKSIZE);
     static struct k_thread anthor_responder_thread;
-#endif // DEVICE_ANCHOR
+#endif
 
-#if defined(DEVICE_NODE)
+#if CONFIG_DEVICE_TYPE_NODE
     #include <device/node.hpp>
     static K_THREAD_STACK_DEFINE(node_responder_stack, DEFAULT_STACKSIZE);
     static struct k_thread node_responder_thread;
-#endif // DEVICE_NODE
+#endif
 
 int main(void)
 {
 	// swd debug
-#if CONFIG_DEBUG_SWD == 1
 	LL_DBGMCU_EnableDBGSleepMode();
-#endif
+
 
 	/* usb config */
 	if (usb_enable(NULL))
@@ -80,7 +78,7 @@ int main(void)
 					   K_THREAD_STACK_SIZEOF(device_rx_work_q_stack_area),
 					   DEVICE_RX_WORK_QUEUE_PRIORITY, NULL);
 
-#if defined(DEVICE_TAG)
+#if CONFIG_DEVICE_TYPE_TAG
 	Tag tag;
 
 	std::function<void(void *, void *, void *)> func = [&](void *arg1, void *arg2, void *arg3)
@@ -105,9 +103,9 @@ int main(void)
 		0,
 		K_NO_WAIT);
 
-#endif //_DEVICE_TAG_
+#endif
 
-#if defined(DEVICE_ANCHOR)
+#if CONFIG_DEVICE_TYPE_ANCHOR
 	Anthor anthor;
 
 	std::function<void(void *, void *, void *)> func = [&](void *arg1, void *arg2, void *arg3)
@@ -131,8 +129,8 @@ int main(void)
 		K_PRIO_COOP(7),
 		0,
 		K_NO_WAIT);
-#endif // _DEVICE_ANCHOR_
-#if defined(DEVICE_NODE)
+#endif
+#if CONFIG_DEVICE_TYPE_NODE
 	Node node;
 
 	std::function<void(void *, void *, void *)> func = [&](void *arg1, void *arg2, void *arg3)
@@ -156,7 +154,7 @@ int main(void)
 		K_PRIO_COOP(7),
 		0,
 		K_NO_WAIT);
-#endif // _DEVICE_ANCHOR_
+#endif
 
 	return 0;
 }

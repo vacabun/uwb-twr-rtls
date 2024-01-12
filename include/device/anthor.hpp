@@ -1,7 +1,7 @@
 #ifndef _ANTHOR_H_
 #define _ANTHOR_H_
 
-#if defined(DEVICE_ANCHOR)
+#if CONFIG_DEVICE_TYPE_ANCHOR
 
 #include "device/device.hpp"
 #include <zephyr/sys/hash_map.h>
