@@ -4,3 +4,5 @@ build
 .DS_Store
 *.DS_Store
 boards/stm32f401_mini.overlay
+prj.conf.template
+prj.conf
