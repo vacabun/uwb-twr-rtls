@@ -9,7 +9,7 @@
 #if CONFIG_DEVICE_TYPE_ANCHOR
 
 LOG_MODULE_REGISTER(anthor, LOG_LEVEL);
-#if defined(DS_TWR)
+#if CONFIG_DS_TWR
 
 SYS_HASHMAP_DEFINE_STATIC(response_tx_ts_map);
 
@@ -44,7 +44,7 @@ void Anthor::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t s
 
     switch (msg_recv[0])
     {
-#if defined(SS_TWR)
+#if CONFIG_SS_TWR
     case (MSG_TWR_POLL):
     {
         msg::twr_response msg;
@@ -57,7 +57,7 @@ void Anthor::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t s
 
 #endif
 
-#if defined(DS_TWR)
+#if CONFIG_DS_TWR
     case (MSG_TWR_POLL):
     {
         msg::twr_response msg;

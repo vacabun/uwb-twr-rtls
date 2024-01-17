@@ -30,10 +30,6 @@ target_sources(app PRIVATE ${ex_sources})
 
 target_include_directories(app PRIVATE include)
 
-# target_compile_definitions(app PRIVATE DS_TWR)
-
-target_compile_definitions(app PRIVATE SS_TWR)
-
 # target_compile_definitions(app PRIVATE LOG_LEVEL=LOG_LEVEL_INF)
 target_compile_definitions(app PRIVATE LOG_LEVEL=LOG_LEVEL_DBG)
 

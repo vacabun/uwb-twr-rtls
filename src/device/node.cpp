@@ -19,7 +19,7 @@ LOG_MODULE_REGISTER(node, LOG_LEVEL);
 
 SYS_HASHMAP_DEFINE_STATIC(poll_tx_ts_map);
 SYS_HASHMAP_DEFINE_STATIC(response_tx_ts_map);
-#if defined(DS_TWR)
+#if CONFIG_DS_TWR
 SYS_HASHMAP_DEFINE_STATIC(poll_rx_ts_map);
 SYS_HASHMAP_DEFINE_STATIC(resp_rx_ts_map);
 SYS_HASHMAP_DEFINE_STATIC(final_tx_ts_map);
@@ -163,7 +163,7 @@ void Node::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src
 {
     switch (msg_recv[0])
     {
-#if defined(SS_TWR)
+#if CONFIG_SS_TWR
     case (MSG_TWR_POLL):
     {
         msg::twr_response msg;
@@ -212,7 +212,7 @@ void Node::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src
         break;
     }
 #endif
-#if defined(DS_TWR)
+#if CONFIG_DS_TWR
     case (MSG_TWR_POLL):
     {
         msg::twr_response msg;

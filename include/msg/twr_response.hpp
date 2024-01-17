@@ -11,7 +11,7 @@ namespace msg
         twr_response();
         uint8_t type;
         uint64_t poll_rx_ts;
-#if defined(SS_TWR)
+#if CONFIG_SS_TWR
         uint64_t resp_tx_ts;
 #endif
     };

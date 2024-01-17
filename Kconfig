@@ -17,6 +17,15 @@ choice
         bool "Anchor"
 endchoice
 
+choice
+    prompt "Measurement Type"
+    default SS_TWR
+    config SS_TWR
+        bool "SS TWR"
+    config DS_TWR
+        bool "DS TWR"
+endchoice
+
 menu "Zephyr options"
     source "Kconfig.zephyr"
 endmenu

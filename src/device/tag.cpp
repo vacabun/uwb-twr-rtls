@@ -16,7 +16,7 @@ LOG_MODULE_REGISTER(tag, LOG_LEVEL);
 
 SYS_HASHMAP_DEFINE_STATIC(poll_tx_ts_map);
 SYS_HASHMAP_DEFINE_STATIC(measure_res);
-#if defined(DS_TWR)
+#if CONFIG_DS_TWR
 SYS_HASHMAP_DEFINE_STATIC(poll_rx_ts_map);
 SYS_HASHMAP_DEFINE_STATIC(resp_rx_ts_map);
 SYS_HASHMAP_DEFINE_STATIC(final_tx_ts_map);
@@ -108,7 +108,7 @@ void Tag::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_
 {
     switch (msg_recv[0])
     {
-#if defined(SS_TWR)
+#if CONFIG_SS_TWR
     case (MSG_TWR_RESPONSE):
     {
 
@@ -140,7 +140,7 @@ void Tag::msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_
         break;
     }
 #endif
-#if defined(DS_TWR)
+#if CONFIG_DS_TWR
     case (MSG_TWR_RESPONSE):
     {
         msg::twr_response *msg = (msg::twr_response *)msg_recv;

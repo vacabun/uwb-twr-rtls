@@ -318,7 +318,7 @@ void Device::set_msg_dly_ts(uint8_t *msg, uint16_t len, uint64_t ts)
     switch (msg_type)
     {
     case MSG_TWR_RESPONSE:
-#if defined(SS_TWR)
+#if CONFIG_SS_TWR
         msg::twr_response *m = (msg::twr_response *)msg;
         m->resp_tx_ts = ts;
 #endif
