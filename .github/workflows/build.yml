@@ -5,7 +5,16 @@ on:
       - main
 jobs:
   build:
+    name: ${{ matrix.legs.name }}
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        legs:
+          - name: build dw1000 tag
+            cmd: cd app; make clean; make dw1000; make tag; #cd ..
+          - name: build dw1000 tag
+            cmd: cd app; make clean; make dw1000; make tag; #cd ..
     steps:
     - name: Install dependencies
       run: |
@@ -38,45 +47,123 @@ jobs:
         cd app
         git submodule update --init --recursive
         cd ..
-    - name: Build tag(dw1000)
-      run: |
-        cd app
-        make clean
-        make dw1000
-        make tag
-        cd ..
-    - name: Build anchor(dw1000)
-      run: |
-        cd app
-        make clean
-        make dw1000
-        make anchor
-        cd ..
-    - name: Build node(dw1000)
-      run: |
-          cd app
-          make clean
-          make dw1000
-          make node
-          cd ..
-    - name: Build tag(dw3000)
-      run: |
-        cd app
-        make clean
-        make dw3000
-        make tag
-        cd ..
-    - name: Build anchor(dw3000)
-      run: |
-        cd app
-        make clean
-        make dw3000
-        make anchor
-        cd ..
-    - name: Build node(dw3000)
-      run: |
-        cd app
-        make clean
-        make dw3000
-        make node
-        cd ..
+    - name: Compile
+      run: ${{ matrix.legs.cmd }}
+  #   - name: Build tag(dw1000)
+  #     run: |
+  #       cd app
+  #       make clean
+  #       make dw1000
+  #       make tag
+  #       cd ..
+  # build_dw1000_anchor:
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #   - name: Install dependencies
+  #     run: |
+  #       sudo wget -O - https://apt.kitware.com/kitware-archive.sh | sudo bash
+  #       sudo apt install -y git cmake ninja-build gperf \
+  #          ccache dfu-util device-tree-compiler wget \
+  #          python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file \
+  #          make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1
+  #   - name: Get Zephyr and install Python dependencies
+  #     run: |
+  #         pip3 install west
+  #         west init .
+  #         west update
+  #         west zephyr-export
+  #         pip3 install -r zephyr/scripts/requirements.txt
+  #   - name: Setup latest Zephyr SDK bundle
+  #     run: |
+  #       wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.1/zephyr-sdk-0.16.1_linux-x86_64.tar.xz
+  #       wget -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.1/sha256.sum | shasum --check --ignore-missing
+  #       tar xvf zephyr-sdk-0.16.1_linux-x86_64.tar.xz
+  #       yes y | zephyr-sdk-0.16.1/setup.sh
+  #   - name: Create app file folder
+  #     run: mkdir app
+  #   - name: Checkout
+  #     uses: actions/checkout@master
+  #     with:
+  #       path: 'app'
+  #   - name: Checkout submodules
+  #     run: |
+  #       cd app
+  #       git submodule update --init --recursive
+  #       cd ..
+  #   - name: Build anchor(dw1000)
+  #     run: |
+  #       cd app
+  #       make clean
+  #       make dw1000
+  #       make anchor
+  #       cd ..
+
+  # build_dw1000_tag:
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #   - name: Install dependencies
+  #     run: |
+  #       sudo wget -O - https://apt.kitware.com/kitware-archive.sh | sudo bash
+  #       sudo apt install -y git cmake ninja-build gperf \
+  #          ccache dfu-util device-tree-compiler wget \
+  #          python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file \
+  #          make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1
+  #   - name: Get Zephyr and install Python dependencies
+  #     run: |
+  #         pip3 install west
+  #         west init .
+  #         west update
+  #         west zephyr-export
+  #         pip3 install -r zephyr/scripts/requirements.txt
+  #   - name: Setup latest Zephyr SDK bundle
+  #     run: |
+  #       wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.1/zephyr-sdk-0.16.1_linux-x86_64.tar.xz
+  #       wget -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.1/sha256.sum | shasum --check --ignore-missing
+  #       tar xvf zephyr-sdk-0.16.1_linux-x86_64.tar.xz
+  #       yes y | zephyr-sdk-0.16.1/setup.sh
+  #   - name: Create app file folder
+  #     run: mkdir app
+  #   - name: Checkout
+  #     uses: actions/checkout@master
+  #     with:
+  #       path: 'app'
+  #   - name: Checkout submodules
+  #     run: |
+  #       cd app
+  #       git submodule update --init --recursive
+  #       cd ..
+  #   - name: Build tag(dw1000)
+  #     run: |
+  #       cd app
+  #       make clean
+  #       make dw1000
+  #       make tag
+  #       cd ..
+  #   - name: Build node(dw1000)
+  #     run: |
+  #         cd app
+  #         make clean
+  #         make dw1000
+  #         make node
+  #         cd ..
+  #   - name: Build tag(dw3000)
+  #     run: |
+  #       cd app
+  #       make clean
+  #       make dw3000
+  #       make tag
+  #       cd ..
+  #   - name: Build anchor(dw3000)
+  #     run: |
+  #       cd app
+  #       make clean
+  #       make dw3000
+  #       make anchor
+  #       cd ..
+  #   - name: Build node(dw3000)
+  #     run: |
+  #       cd app
+  #       make clean
+  #       make dw3000
+  #       make node
+  #       cd ..
