@@ -53,3 +53,8 @@ test_node:
 	echo "CONFIG_DEVICE_ADDRESS=2" >> $(CURDIR)/prj.conf
 	west build
 	west flash -r openocd --config boards/daplink.cfg
+
+flash_stlink:
+	west flash -r openocd --config boards/stlink.cfg
+flash_daplink:
+	west flash -r openocd --config boards/daplink.cfg

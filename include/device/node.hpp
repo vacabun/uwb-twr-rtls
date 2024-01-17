@@ -8,8 +8,8 @@
 
 #include <string>
 
-#define RING_BUF_SIZE 1024
-#define JSON_BUF_SIZE 256
+#define RING_BUF_SIZE 64
+#define JSON_BUF_SIZE 64
 
 class Node : public Device
 {
@@ -23,6 +23,7 @@ public:
     void msg_process_cb(uint8_t *msg_recv, uint16_t msg_recv_len, uint64_t src_addr, uint64_t dst_addr, uint64_t rx_ts);
     static void serial_isr(const struct device *dev, void *user_data);
     int parse_json(uint8_t *json_buf, size_t json_buf_len);
+    void cmd_process_cb(uint8_t type, uint8_t arg1, uint8_t arg2);
 };
 
 #endif

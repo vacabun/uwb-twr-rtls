@@ -8,7 +8,7 @@
 #define TX_ANT_DLY 16385
 #define RX_ANT_DLY 16385
 /* Delay tx frames, in UWB microseconds.*/
-#define TX_DLY_UUS 4000
+#define TX_DLY_UUS 3000
 
 #define BROADCAST_ADDR 0x0000000000000000
 
