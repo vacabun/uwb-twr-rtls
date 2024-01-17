@@ -25,12 +25,12 @@ node:
 	echo "CONFIG_DEVICE_ADDRESS=1" >> $(CURDIR)/prj.conf
 	west build
 ds_twr:
-	if grep -q 'CONFIG_SS_TWR=y' $(CURDIR)/prj.conf; then \
-		sed -i 's/CONFIG_SS_TWR=y/CONFIG_DS_TWR=y/g' $(CURDIR)/prj.conf; \
+	if grep -q 'CONFIG_SS_TWR=y' $(CURDIR)/prj.conf.template; then \
+		sed -i 's/CONFIG_SS_TWR=y/CONFIG_DS_TWR=y/g' $(CURDIR)/prj.conf.template; \
 	fi
 ss_twr:
-	if grep -q 'CONFIG_DS_TWR=y' $(CURDIR)/prj.conf; then \
-		sed -i 's/CONFIG_DS_TWR=y/CONFIG_SS_TWR=y/g' $(CURDIR)/prj.conf; \
+	if grep -q 'CONFIG_DS_TWR=y' $(CURDIR)/prj.conf.template; then \
+		sed -i 's/CONFIG_DS_TWR=y/CONFIG_SS_TWR=y/g' $(CURDIR)/prj.conf.template; \
 	fi
 test:
 	cp $(CURDIR)/prj.conf.template $(CURDIR)/prj.conf
