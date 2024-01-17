@@ -11,12 +11,13 @@ jobs:
       fail-fast: false
       matrix:
         legs:
-          - name: build dw1000 tag ss_twr
-            cmd: cd app; make clean; make dw1000; make ss_twr;make tag;
-          - name: build dw1000 anchor ss_twr
-            cmd: cd app; make clean; make dw1000; make ss_twr; make anchor;
-          - name: build dw1000 node ss_twr
-            cmd: cd app; make clean; make dw1000; make ss_twr; make node;
+          # - name: build dw1000 tag ss_twr
+          #   cmd: cd app; make clean; make dw1000; make ss_twr;make tag;
+          # - name: build dw1000 anchor ss_twr
+          #   cmd: cd app; make clean; make dw1000; make ss_twr; make anchor;
+          # - name: build dw1000 node ss_twr
+          #   cmd: cd app; make clean; make dw1000; make ss_twr; make node;
+
           - name: build dw3000 tag ss_twr
             cmd: cd app; make clean; make dw3000; make ss_twr; make tag;
           - name: build dw3000 anchor ss_twr
@@ -30,6 +31,7 @@ jobs:
             cmd: cd app; make clean; make dw1000; make ds_twr; make anchor;
           - name: build dw1000 node ds_twr
             cmd: cd app; make clean; make dw1000; make ds_twr; make node;
+
           - name: build dw3000 tag ds_twr
             cmd: cd app; make clean; make dw3000; make ds_twr; make tag;
           - name: build dw3000 anchor ds_twr
